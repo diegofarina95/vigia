@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}Prospector{% endblock %} · Vigía</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+{% block cabeza %}{% endblock %}
+</head><body>
+<header class="barra">
+  <a class="marca" href="{{ url_for('panel') }}">Prospector</a>
+  <nav>
+    <a href="{{ url_for('analizar_form') }}">Analizar</a>
+    <a href="{{ url_for('importar_form') }}">Importar</a>
+    <a href="{{ url_for('revisar') }}">Revisar</a>
+    <a href="{{ url_for('bloqueados') }}">Bloqueados</a>
+    <a href="{{ url_for('metricas') }}">Métricas</a>
+  </nav>
+  <span class="aviso-tailnet" title="Esta consola solo es accesible por Tailscale">solo tailnet</span>
+</header>
+{% with mensajes = get_flashed_messages(with_categories=true) %}
+  {% for categoria, mensaje in mensajes %}<p class="flash {{ categoria }}">{{ mensaje }}</p>{% endfor %}
+{% endwith %}
+<main>{% block contenido %}{% endblock %}</main>
+</body></html>

@@ -1,0 +1,10 @@
+services:
+  vigia:
+    build: .
+    ports:
+      - "8110:8110"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

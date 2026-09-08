@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block titulo %}{{ job.name or 'Trabajo' }}{% endblock %}
+{% block cabeza %}{% if job.running %}<meta http-equiv="refresh" content="2">{% endif %}{% endblock %}
+{% block contenido %}
+<h1>{{ job.name or 'Trabajo' }}</h1>
+<p>{{ job.done }} de {{ job.total or '?' }} — {{ 'en marcha' if job.running else 'terminado' }}</p>
+<div class="barra-progreso"><span style="width: {{ job.percent }}%"></span></div>
+<pre class="registro">{% for l in job.lines[-80:] %}{{ l }}
+{% endfor %}</pre>
+{% if not job.running %}<p><a href="{{ url_for('panel') }}">← Volver al panel</a></p>{% endif %}
+{% endblock %}

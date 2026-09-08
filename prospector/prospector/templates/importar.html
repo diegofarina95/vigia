@@ -1,0 +1,22 @@
+{% extends "base.html" %}{% block titulo %}Importar{% endblock %}
+{% block contenido %}
+<h1>Importar prospectos</h1>
+<form method="post" enctype="multipart/form-data" class="formulario">
+  <fieldset>
+    <legend>Un CSV</legend>
+    <p class="nota">Columnas: <code>domain</code>, y opcionalmente <code>email</code>,
+      <code>company_name</code>, <code>country</code>, <code>sector</code>.</p>
+    <input type="file" name="csv" accept=".csv,text/csv">
+  </fieldset>
+  <fieldset>
+    <legend>O una lista pegada</legend>
+    <p class="nota">Una por línea: <code>dominio, correo, empresa, país, sector</code>.
+      Con el dominio solo también vale.</p>
+    <textarea name="pegado" rows="10" placeholder="empresa.es, info@empresa.es, Empresa SL, ES, legal"></textarea>
+  </fieldset>
+  <button>Importar</button>
+</form>
+<p class="nota">Las direcciones se clasifican al entrar. Las personales se guardan
+  marcadas y bloqueadas — aparecen en <a href="{{ url_for('bloqueados') }}">Bloqueados</a>,
+  no se descartan en silencio.</p>
+{% endblock %}

@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+dist/
+data/
+.env
+*.key
+.pytest_cache/
+
+# Secrets and local copies (any .env variant except the template)
+.env*
+!.env.example
+# Test/coverage artefacts
+.coverage
+*.tsbuildinfo
+test-results/
+playwright-report/
+# Local tool config
+.claude/
+# Internal Google OAuth verification notes (Spanish, contain personal contact data)
+docs/verificacion-oauth/

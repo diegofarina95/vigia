@@ -1,0 +1,1012 @@
+{
+  "severity": {
+    "critical": "critical",
+    "high": "high",
+    "medium": "medium",
+    "low": "low",
+    "info": "info"
+  },
+  "status": {
+    "pass": "Pass",
+    "fail": "Fail",
+    "warn": "Warn",
+    "undetermined": "Not verified"
+  },
+  "findings": {
+    "internal-consistency": {
+      "title": "Internal inconsistency detected in this scan",
+      "scope": "internal diagnostic",
+      "remediation": "Report this scan's date to the Vigía team. Every other finding is unaffected."
+    },
+    "composite-superadmin-dormant-no-2sv": {
+      "title": "Super admin with no 2FA that has never signed in",
+      "scope": "super admins",
+      "description": "{count} account(s) match all of: is a super admin + has no 2-Step Verification + has never signed in.\n\nWhy this is worse than the separate findings: each fact is manageable alone. Together they are a permanent back door — the account holds full control of the tenant, a stolen password is enough to use it, and because it has never signed in there is no baseline of normal activity, so nobody would notice someone else starting to use it. These are usually left over from setup or migrations, with no owner watching them.",
+      "description_clean": "No account is simultaneously a super admin, without 2-Step Verification and never signed in.",
+      "remediation": "Suspend these accounts today. If one is genuinely needed, enroll it in 2-Step Verification with a security key before re-enabling it, and give it a named owner.",
+      "cis": "CIS GWS §1 — Limit super admins + enforce 2SV + disable inactive accounts"
+    },
+    "composite-superadmin-no-2sv": {
+      "title": "Super admin without 2-Step Verification",
+      "scope": "super admins",
+      "description": "{count} account(s) match all of: is a super admin + has no 2-Step Verification.\n\nWhy this is worse than the separate findings: a super admin can read, change or export anything in the tenant and can lock every other admin out. Without a second factor, one phished password is full tenant compromise — there is no second line of defence.",
+      "description_clean": "Every super admin has 2-Step Verification.",
+      "remediation": "Enroll these admins in 2-Step Verification now, preferably with a hardware security key or passkey, then enforce it for the admin organizational unit.",
+      "cis": "CIS GWS §1 — 2-Step Verification on privileged accounts"
+    },
+    "composite-superadmin-dormant": {
+      "title": "Super admin with no activity for {days}+ days",
+      "scope": "super admins",
+      "description": "{count} account(s) match all of: is a super admin + has not signed in recently.\n\nWhy this is worse than the separate findings: an unused admin account keeps maximum privilege while nobody watches it. Its misuse would not stand out, because there is no recent activity to compare against.",
+      "description_clean": "Every super admin has signed in recently.",
+      "remediation": "Confirm whether the account is still needed. If it is not, remove the admin role and suspend it; if it is, keep it enrolled in 2SV and review it quarterly.",
+      "cis": "CIS GWS §1 — Limit super admins + review inactive accounts"
+    },
+    "composite-dormant-no-2sv": {
+      "title": "Account with no 2FA that has never signed in",
+      "scope": "active accounts, organisation-wide",
+      "description": "{count} account(s) match all of: has no 2-Step Verification + has never signed in.\n\nWhy this is worse than the separate findings: these accounts still hold the initial password set by IT, have no second factor, and no owner signs in to notice anything odd. They are the quietest way into a tenant.",
+      "description_clean": "No account without 2-Step Verification is also unused.",
+      "remediation": "Suspend them until someone actually needs the account. When it is handed over, require 2SV enrolment at first sign-in.",
+      "cis": "CIS GWS §1 — Enforce 2SV + disable unused accounts"
+    },
+    "composite-service-account-no-2sv": {
+      "title": "Shared or functional account without 2FA",
+      "scope": "shared or functional accounts (admin@, info@, integrations@…)",
+      "description": "{count} account(s) match all of: has no 2-Step Verification + looks like a shared or functional account.\n\nWhy this is worse than the separate findings: shared mailboxes tend to have passwords known by several people, stored in scripts or documents, and rarely rotated. Without a second factor, any leak of that password is enough — and because the account is shared, nobody owns the job of noticing.",
+      "description_clean": "No shared or functional account is missing 2-Step Verification.",
+      "remediation": "Enroll the account in 2-Step Verification, or replace it with a group or delegated access so no shared password exists at all.",
+      "cis": "CIS GWS §1 — Enforce 2SV for all accounts"
+    },
+    "2sv-delegated-admins": {
+      "title": "Delegated admin without 2-Step Verification",
+      "scope": "delegated admins",
+      "description": "Delegated admins can manage users, reset passwords or change service settings: without a second factor, one phished password is enough to use those privileges. Super admins are assessed separately, in their own findings.",
+      "remediation": "Enroll these admins in 2SV now (Security > 2-Step Verification), then enforce it for their organizational unit. For admins, prefer security keys or passkeys.",
+      "cis": "CIS GWS §1 — 2-Step Verification"
+    },
+    "2sv-users": {
+      "title": "Users without 2-Step Verification set up",
+      "scope": "whole organisation (all active accounts)",
+      "description": "{without} of {total} active users have not enrolled in 2-Step Verification. Password-only accounts are the most common entry point for account takeover.",
+      "remediation": "Run an enrollment campaign, then enforce 2SV org-wide with a grace period (Security > 2-Step Verification > Enforcement).",
+      "cis": "CIS GWS §1 — 2-Step Verification"
+    },
+    "2sv-enforcement": {
+      "title": "Accounts outside the scope of two-step enforcement",
+      "scope": "whole organisation (all active accounts)",
+      "description": "Until 2SV is enforced, enrolling is voluntary. {count} active users are not covered by an enforcement policy, so they could remove their second factor at any time.",
+      "remediation": "Turn on 2SV enforcement for every organizational unit (Security > 2-Step Verification > Enforcement > On).",
+      "cis": "CIS GWS §1 — 2-Step Verification"
+    },
+    "super-admin-count": {
+      "title": "Number of super-admin accounts",
+      "scope": "super admins",
+      "description_over": "{count} super-admin accounts found (threshold: {threshold}). Every super admin is a maximum-impact target; Google and CIS recommend 2-4.",
+      "description_single": "Only {count} super-admin account exists. If it is lost or compromised there is no second admin for recovery — Google recommends at least 2.",
+      "description_ok": "{count} super-admin accounts — within the recommended range (2-{threshold}).",
+      "remediation": "Keep 2-4 super admins. Move day-to-day administration to delegated admin roles with least privilege (Account > Admin roles).",
+      "cis": "CIS GWS §1 — Limit super-admin accounts (2-4 recommended)"
+    },
+    "delegated-admins": {
+      "title": "Delegated admin accounts (inventory)",
+      "scope": "delegated admins",
+      "description": "{count} delegated admin accounts. Informational — review that each role is still needed and scoped to least privilege.",
+      "remediation": "Review role assignment under Account > Admin roles.",
+      "cis": "CIS GWS §1 — Limit super-admin accounts (2-4 recommended)"
+    },
+    "dormant-accounts": {
+      "title": "Active accounts with no sign-in for {days}+ days",
+      "scope": "active accounts, organisation-wide",
+      "description": "{count} active accounts have not signed in for over {days} days. Dormant accounts are prime targets: nobody notices when they get compromised, and they often keep paid licenses.",
+      "remediation": "Confirm with the owner or their manager, then suspend the account. Transfer data and free the license before deletion.",
+      "cis": "CIS GWS §1 — Review and disable inactive accounts"
+    },
+    "never-logged-in": {
+      "title": "Active accounts that have never signed in",
+      "scope": "active accounts, organisation-wide",
+      "description": "{count} active accounts (older than {grace} days) have never signed in. They usually hold the initial password set by IT and have no 2SV — easy targets nobody monitors.",
+      "remediation": "Suspend them until the owner actually needs the account.",
+      "cis": "CIS GWS §1 — Review and disable inactive accounts"
+    },
+    "suspended-accounts": {
+      "title": "Suspended accounts still present",
+      "scope": "suspended accounts",
+      "description": "{count} suspended accounts remain in the directory. They can be silently re-enabled and may still hold licenses, group memberships and data shares.",
+      "remediation": "For leavers: transfer data, then delete. Keep suspension only as a short-term offboarding step.",
+      "cis": "CIS GWS §1 — Review and disable inactive accounts"
+    },
+    "login-compromised": {
+      "title": "Accounts Google flagged as compromised",
+      "scope": "whole organisation (sign-in audit log)",
+      "description": "Google's own detection disabled or flagged these accounts for a leaked password, hijacking or a government-backed attack. Treat them as breached until proven otherwise.",
+      "description_clean": "No leaked-password, hijack or attack alerts in the audit window.",
+      "remediation": "Reset the password, revoke sessions and app tokens, and re-verify 2SV for each account. Review the Alert center for the full context.",
+      "cis": "CIS GWS §1 — Monitor sign-in and account security alerts"
+    },
+    "login-suspicious": {
+      "title": "Suspicious sign-in activity",
+      "scope": "whole organisation (sign-in audit log)",
+      "description": "Google flagged sign-ins as suspicious for {count} account(s) (unusual location, device or pattern).",
+      "description_clean": "No sign-ins were flagged as suspicious in the audit window.",
+      "remediation": "Confirm the activity with each user. If unrecognised, reset credentials and enforce 2SV. Consider Context-Aware Access to limit sign-in locations.",
+      "cis": "CIS GWS §1 — Monitor sign-in and account security alerts"
+    },
+    "login-brute-force": {
+      "title": "Possible password-guessing (failed sign-in bursts)",
+      "scope": "whole organisation (sign-in audit log)",
+      "description": "{count} account(s) had 10+ failed sign-ins in the audit window, which can indicate password-guessing.",
+      "description_clean": "No accounts showed an unusual burst of failed sign-ins.",
+      "remediation": "Enforce 2SV (a correct password alone then fails), and consider stronger password requirements or Context-Aware Access.",
+      "cis": "CIS GWS §1 — Monitor sign-in and account security alerts"
+    },
+    "login-security": {
+      "title": "Sign-in security alerts",
+      "scope": "whole organisation (sign-in audit log)",
+      "description": "Could not read the sign-in audit log ({reason}).",
+      "remediation": "Confirm the connecting admin has Reports privileges.",
+      "cis": "CIS GWS §1 — Monitor sign-in and account security alerts"
+    },
+    "oauth-high-risk": {
+      "title": "Third-party apps holding high-risk scopes",
+      "scope": "third-party apps authorised by users",
+      "description": "{count} third-party apps hold scopes granting broad access to Gmail content, all of Drive, admin APIs or Cloud resources. A breach at any of those vendors becomes a breach of your data. (The authorisation window actually read is stated in the finding's scope; {apps_seen} apps seen.)",
+      "remediation": "Review each app under Security > API controls > App access control. Block apps you don't recognise and switch app access to 'restricted' so new high-risk grants require admin approval.",
+      "cis": "CIS GWS §2 — Control third-party app access to Google data"
+    },
+    "oauth-widely-granted": {
+      "title": "Apps authorised by many users",
+      "scope": "third-party apps authorised by users",
+      "description": "{count} apps have been authorised by {threshold}+ users. Broad adoption of an unvetted app multiplies the blast radius if it is compromised.",
+      "remediation": "Vet widely-used apps (vendor, data handling, need) and mark decisions as trusted/blocked under App access control.",
+      "cis": "CIS GWS §2 — Control third-party app access to Google data"
+    },
+    "oauth-dwd": {
+      "title": "Domain-wide delegation grants",
+      "scope": "domain-wide delegation clients",
+      "description": "Domain-wide delegation lets a service account impersonate EVERY user for the granted scopes — the most powerful grant in Workspace. {count} grant event(s) observed in the audit window.",
+      "description_clean": "Domain-wide delegation lets a service account impersonate EVERY user for the granted scopes — the most powerful grant in Workspace. No grant events in the audit window ; older grants may exist, so verify the current list in the Admin console.",
+      "remediation": "Review Security > API controls > Domain-wide delegation. Remove clients you don't recognise and narrow scopes to the minimum.",
+      "cis": "CIS GWS §2 — Control third-party app access to Google data"
+    },
+    "audit-admin-log": {
+      "title": "Admin audit log accessibility",
+      "scope": "admin audit log",
+      "description": "The admin audit log is accessible. Recent Admin console changes are listed below — review anything you don't recognise.",
+      "description_error": "Could not read the admin audit log ({reason}). Confirm the connecting admin has Reports privileges.",
+      "remediation": "Set up alerting rules for sensitive admin events (Security > Alert center, Reporting > Audit and investigation).",
+      "cis": "CIS GWS §1 — Review audit logs regularly"
+    },
+    "audit-risky-changes": {
+      "title": "Risky administrative changes in the audit window",
+      "scope": "admin audit log",
+      "description": "{changes} change(s) across {categories} risk categor(y/ies) were recorded. The audit log captures changes, not the current default state, so review each one and confirm it was intended.",
+      "description_clean": "No risky configuration changes were recorded in the audit window. This does not confirm the settings are safe — for defaults that cannot be read, see the manual checks.",
+      "remediation": "For each change, confirm who made it and why. Add alerting rules for these event types in the Alert center.",
+      "cis": "CIS GWS §1 — Review audit logs regularly"
+    },
+    "email-spf": {
+      "title": "SPF records across {domains} domain(s)",
+      "scope": "{domains} configured domain(s), via public DNS",
+      "description": "Checked against public DNS for every configured domain. Worst result: {worst_status}.",
+      "remediation": "Publish a TXT record like 'v=spf1 include:_spf.google.com ~all' on every sending domain, keep it to a single record, and end it with ~all or -all. Watch the RFC 7208 limit of 10 DNS lookups too.",
+      "cis": "CIS GWS §3 (Gmail) — Configure SPF"
+    },
+    "email-dkim": {
+      "title": "DKIM signing across {domains} domain(s)",
+      "scope": "{domains} configured domain(s), via public DNS",
+      "description": "Checked against public DNS for every configured domain. Worst result: {worst_status}.",
+      "remediation": "Generate a DKIM key in the Admin console (Apps > Google Workspace > Gmail > Authenticate email), publish the DNS record, then click 'Start authentication'. Only the 'google' selector is checked, the one Workspace uses: if you sign with a custom selector, write to diego@diegofarina.com and we verify it by hand.",
+      "cis": "CIS GWS §3 (Gmail) — Configure DKIM"
+    },
+    "email-dmarc": {
+      "title": "DMARC policy across {domains} domain(s)",
+      "scope": "{domains} configured domain(s), via public DNS",
+      "description": "Checked against public DNS for every configured domain. Worst result: {worst_status}.",
+      "remediation": "Publish a '_dmarc' TXT starting at 'v=DMARC1; p=none; rua=mailto:…' to collect reports, then ratchet to p=quarantine and finally p=reject.",
+      "cis": "CIS GWS §3 (Gmail) — Configure DMARC"
+    },
+    "mail-mta-sts": {
+      "title": "MTA-STS (enforced TLS for inbound mail) across {domains} domain(s)",
+      "scope": "{domains} configured domain(s), via public DNS",
+      "description": "Checked against public DNS for every configured domain. Worst result: {worst_status}.",
+      "remediation": "Publish an MTA-STS policy: a '_mta-sts' TXT record plus a policy file at https://mta-sts.<domain>/.well-known/mta-sts.txt listing your MX hosts. Start in 'testing' mode, then move to 'enforce'.",
+      "cis": "CIS GWS §3 (Gmail) — Enforce TLS for mail in transit"
+    },
+    "mail-tls-rpt": {
+      "title": "TLS-RPT (TLS failure reporting) across {domains} domain(s)",
+      "scope": "{domains} configured domain(s), via public DNS",
+      "description": "Checked against public DNS for every configured domain. Worst result: {worst_status}.",
+      "remediation": "Publish a '_smtp._tls' TXT record: 'v=TLSRPTv1; rua=mailto:tls@<domain>' so you learn when TLS delivery to your domain fails.",
+      "cis": "CIS GWS §3 (Gmail) — Monitor mail transport security"
+    },
+    "dns-dnssec": {
+      "title": "DNSSEC (signed DNS) across {domains} domain(s)",
+      "scope": "{domains} configured domain(s), via public DNS",
+      "description": "Checked against public DNS for every configured domain. Worst result: {worst_status}.",
+      "remediation": "Enable DNSSEC at your DNS provider (one switch in Cloudflare), then add the DS record at your registrar. Without it, your own SPF, DKIM and DMARC records can be spoofed.",
+      "cis": "CIS GWS — Protect DNS integrity"
+    },
+    "email-auth": {
+      "title": "Email authentication (SPF/DKIM/DMARC)",
+      "scope": "configured domains",
+      "description_nodomains": "No domains are configured yet, so nothing was checked. Domains sync themselves from Workspace on every scan and are verified against public DNS; if this is still empty after a scan, write to diego@diegofarina.com.",
+      "remediation": "Re-scan: domains sync from Workspace automatically."
+    },
+    "policy-drive-sharing": {
+      "title": "Drive external sharing",
+      "scope": "Admin console settings",
+      "description": "Files shared outside the organisation are the most common route for data to leave a tenant. 'Allowed' means any user can share anything with anyone.",
+      "description_unset": "No explicit policy is set for this option, so the tenant is on Google's default. The API only reports values that were explicitly configured, so this cannot be confirmed automatically — check it once by hand.",
+      "remediation": "Admin console > Apps > Google Workspace > Drive and Docs > Sharing settings: set sharing outside the organisation to OFF or allowlisted domains, and default link sharing to 'Restricted'.",
+      "cis": "CIS GWS §4 (Drive) — Restrict external sharing"
+    },
+    "policy-gmail-forwarding": {
+      "title": "Gmail automatic forwarding",
+      "scope": "Admin console settings",
+      "description": "Attackers who compromise a mailbox routinely add a silent forwarding rule to keep reading mail after the password is reset. Disabling auto-forwarding removes that path.",
+      "description_unset": "No explicit policy is set for this option, so the tenant is on Google's default. The API only reports values that were explicitly configured, so this cannot be confirmed automatically — check it once by hand.",
+      "remediation": "Admin console > Apps > Google Workspace > Gmail > End User Access: turn off 'Automatic forwarding', at least for sensitive organizational units.",
+      "cis": "CIS GWS §3 (Gmail) — Restrict auto-forwarding"
+    },
+    "policy-password": {
+      "title": "Password policy",
+      "scope": "Admin console settings",
+      "description": "Short or reusable passwords make credential stuffing cheap. Aim for 12+ characters, no reuse, and no forced periodic rotation.",
+      "description_unset": "No explicit policy is set for this option, so the tenant is on Google's default. The API only reports values that were explicitly configured, so this cannot be confirmed automatically — check it once by hand.",
+      "remediation": "Admin console > Security > Authentication > Password management: minimum 12 characters, disallow reuse, and drop forced expiry.",
+      "cis": "CIS GWS §1 — Enforce strong password policy"
+    },
+    "policy-session": {
+      "title": "Google session length",
+      "scope": "Admin console settings",
+      "description": "A stolen session cookie stays valid until the session expires. Finite sessions limit how long a stolen token is useful, especially for admins.",
+      "description_unset": "No explicit policy is set for this option, so the tenant is on Google's default. The API only reports values that were explicitly configured, so this cannot be confirmed automatically — check it once by hand.",
+      "remediation": "Admin console > Security > Access and data control > Google session control: set a finite web session length (12-24h for privileged units).",
+      "cis": "CIS GWS §1 — Limit session duration"
+    },
+    "policy-marketplace": {
+      "title": "Marketplace app allowlist",
+      "scope": "Admin console settings",
+      "description": "An allowlist means users can only install Marketplace apps you have vetted, instead of granting data access to anything they find.",
+      "description_unset": "No explicit policy is set for this option, so the tenant is on Google's default. The API only reports values that were explicitly configured, so this cannot be confirmed automatically — check it once by hand.",
+      "remediation": "Admin console > Apps > Google Workspace Marketplace apps > Settings: allow only allowlisted apps, and review what is already installed.",
+      "cis": "CIS GWS §2 — Control Marketplace app installation"
+    },
+    "policy-groups-sharing": {
+      "title": "Google Groups external access",
+      "scope": "Admin console settings",
+      "description": "Publicly accessible groups can expose internal discussions and let outsiders post to internal mailing lists.",
+      "description_unset": "No explicit policy is set for this option, so the tenant is on Google's default. The API only reports values that were explicitly configured, so this cannot be confirmed automatically — check it once by hand.",
+      "remediation": "Admin console > Apps > Google Workspace > Groups for Business > Sharing settings: set access from outside the organisation to Private.",
+      "cis": "CIS GWS — Groups sharing settings"
+    },
+    "policy-automation": {
+      "title": "Automatic reading of Admin console settings is not active",
+      "scope": "Admin console settings",
+      "description": "Vigía can check Drive sharing, Gmail forwarding, password policy, session length, Marketplace allowlisting and Groups access automatically using the read-only Cloud Identity policy scope (sensitive, not restricted — no CASA). Right now it cannot: {hint}"
+    },
+    "policy-2sv-enforcement": {
+      "title": "Two-step enforcement: how it is configured in the console",
+      "scope": "Admin console settings",
+      "description": "Until 2-Step Verification is enforced, enrolling is optional: anyone who skips it signs in with nothing but a password, and anyone already enrolled can turn it off whenever they like. Enforcement is set per organizational unit, so the question is not whether it is switched on — it is who it actually covers.",
+      "remediation": "Admin console > Security > Authentication > 2-Step Verification > Enforcement: turn it on for the whole organisation, not just one organizational unit.",
+      "cis": "CIS GWS §1 — 2-Step Verification"
+    },
+    "policy-2sv-methods": {
+      "title": "Allowed second-factor methods",
+      "scope": "Admin console settings",
+      "description": "SMS and voice calls are not a real second factor: they can be intercepted with a SIM swap, with a divert set up at the carrier, or with a phishing page that asks for the code and replays it on the spot. Against a targeted attacker, an account protected by SMS is almost as exposed as one with no second factor at all — with the added problem that everyone assumes it is protected. Only passkeys and security keys resist phishing, because the credential is bound to the real domain.",
+      "remediation": "Admin console > Security > Authentication > 2-Step Verification, 'Methods' section: remove SMS and voice call. Start with the admin organizational units, and hand out security keys or passkeys before you tighten this for everyone.",
+      "cis": "CIS GWS §1 — Phishing-resistant 2-Step Verification"
+    },
+    "policy-2sv-grace": {
+      "title": "2-Step Verification grace period",
+      "scope": "Admin console settings",
+      "description": "The grace period is how long a new account can keep signing in with a password alone. For those days enforcement is announced but not applied, and that is exactly the window credential thieves look for: the account already exists and already carries its permissions.",
+      "remediation": "Admin console > Security > Authentication > 2-Step Verification: bring the enrollment grace period down to a week or less.",
+      "cis": "CIS GWS §1 — 2-Step Verification"
+    },
+    "policy-imap": {
+      "title": "IMAP access to Gmail",
+      "scope": "Admin console settings",
+      "description": "IMAP gets you into the mailbox with a username and a password, from any mail client, without ever meeting the two-step verification challenge. It is the classic side door: whoever holds the password reads all the mail without touching Google's sign-in screen and without leaving the trail a web sign-in would.",
+      "remediation": "Admin console > Apps > Google Workspace > Gmail > End User Access: turn IMAP off, or limit it to the clients you have approved.",
+      "cis": "CIS GWS §3 (Gmail) — Restrict legacy mail protocols"
+    },
+    "policy-pop": {
+      "title": "POP access to Gmail",
+      "scope": "Admin console settings",
+      "description": "POP has the same problem as IMAP, plus a worse one: it downloads messages onto the client machine, so once they are copied they sit outside your control, outside your retention policy and outside any deletion you carry out later.",
+      "remediation": "Admin console > Apps > Google Workspace > Gmail > End User Access: turn POP off. It is almost never needed.",
+      "cis": "CIS GWS §3 (Gmail) — Restrict legacy mail protocols"
+    },
+    "policy-less-secure-apps": {
+      "title": "Less secure apps (password-only access)",
+      "scope": "Admin console settings",
+      "description": "Less secure apps sign in with a username and a password: no OAuth, no two-step verification challenge. This setting matters MORE, not less, once you have already enforced 2SV — it is the exact route that cancels the enforcement out. And because the connection is not interactive, it never raises a suspicious sign-in alert either.",
+      "remediation": "Admin console > Security > Access and data control > Less secure apps: turn it off. Anything that still depends on it has to move to OAuth.",
+      "cis": "CIS GWS §1 — Block password-only access"
+    },
+    "policy-drive-link-default": {
+      "title": "Default access for new Drive files",
+      "scope": "Admin console settings",
+      "description": "This is the access level every file carries the moment someone creates it. If the default is 'anyone with the link', a leak does not need a human mistake: it happens on its own every time a document is shared without a second look.",
+      "remediation": "Admin console > Apps > Google Workspace > Drive and Docs > Sharing settings > Default general access: set it to 'Restricted'.",
+      "cis": "CIS GWS §4 (Drive) — Default file access"
+    },
+    "composite-superadmin-no-2sv-no-recovery": {
+      "title": "Super admin with no 2FA and unsafe account recovery",
+      "scope": "super admins",
+      "description": "{count} account(s) match all of: is a super admin + has no 2-Step Verification + has unsafe account recovery.\n\nWhy this is worse than the separate findings: each fact is already serious on its own; together they close the loop. With no second factor, a phished password walks straight in. With recovery left unsafe, that access becomes permanent: if the attacker reaches the personal recovery mailbox first, the account is theirs and you have no way back, because without a recovery phone your only route is Google support, and that takes days. It is the difference between an incident and losing the tenant.",
+      "remediation": "Treat these accounts as an emergency: enroll them in 2-Step Verification with a security key today, set a corporate recovery phone, and remove any recovery e-mail on a personal domain. Make sure at least one other super admin already has 2FA, so you cannot lock yourself out.",
+      "cis": "CIS GWS §1 — 2-Step Verification on privileged accounts + recovery protection",
+      "description_clean": "No super admin is simultaneously without 2-Step Verification and with unsafe account recovery."
+    },
+    "recovery-super-admins": {
+      "title": "Account recovery on super-admin accounts",
+      "scope": "super admins",
+      "description": "{affected} of {total} super admins have unsafe account recovery.\n\nWith no recovery phone, losing the second factor or being locked out by an attacker puts the account out of reach: the only way back runs through Google support, and that takes days. A recovery e-mail on a consumer domain is worse still: it moves the security of the whole tenant into a mailbox your organisation does not control, cannot audit and cannot revoke. Whoever owns that inbox can reset the super admin — and can still do it the day after that person leaves the company.",
+      "remediation": "Open Directory > Users, go into each super admin and check 'Security info': every one needs a corporate recovery phone and no recovery e-mail on a consumer domain — replace any you find with an address on your own domain. If the account is a break-glass account with nobody behind it, keep its backup codes in your secrets manager instead of pointing it at someone's personal mailbox.",
+      "cis": "CIS GWS §1 — Protect privileged accounts and their recovery",
+      "description_clean": "All {total} super admins have a recovery phone and no recovery e-mail on a consumer domain.",
+      "description_undetermined": "No account in the directory returns a recovery phone or a recovery e-mail. They may genuinely not be set, or the API may have stopped returning those fields — the two cannot be told apart, so nobody is accused. Check it by hand on each super admin's record."
+    },
+    "admin-login-countries": {
+      "title": "Countries the super admins sign in from",
+      "scope": "super admins",
+      "description": "{seen} of {admins} super admins appear in the sign-in log, over a window of {days} day(s).\n\nThis is an inventory, not a failure: it is here so you can recognise at a glance where the accounts that control the whole tenant are normally used from. The country comes from a local database — no IP address leaves this server.",
+      "remediation": "Go through the list with the people concerned: what matters is not the country itself, but whether it matches where that person actually works.",
+      "cis": "CIS GWS §1 — Monitor sign-ins to privileged accounts",
+      "description_no-geodb": "{seen} of {admins} super admins appear in the sign-in log, over a window of {days} day(s).\n\nNo country database is installed, so the IP addresses are listed without being resolved to a country. The inventory is still useful for recognising which networks are normally used.",
+      "description_undetermined": "The sign-in log could not be read, so there is nothing to say about where the most privileged accounts are used from."
+    },
+    "admin-login-new-country": {
+      "title": "Super-admin sign-ins from a new country",
+      "scope": "super admins",
+      "description": "{count} super admin(s) signed in during the last {days} days from a country with no earlier sign-in of theirs on record, across {window} days of log.\n\nThe country is not the point; the change is. An account with months of history in one place that suddenly appears from another is the cheapest signal there is that somebody else is using it — and on a super admin that means the entire tenant.\n\nBefore you panic: a trip, a new VPN or a phone roaming abroad produce exactly the same signal. This is confirmed with a phone call, not with a report.",
+      "remediation": "Ask that person whether the sign-in was theirs. If they do not recognise it: sign out their sessions (Directory > Users > the account > Security > Sign out), reset the password, review the apps with access to their account, and check the admin audit log in case any setting was changed.",
+      "cis": "CIS GWS §1 — Monitor sign-ins to privileged accounts",
+      "description_clean": "No super admin has signed in from a new country in the last {days} days, across {window} days of log.",
+      "description_no-baseline": "The log only covers {days} day(s), fewer than the {needed} needed to tell \"a new country\" from \"the only country there is\". With no baseline, calling anything new would be making it up."
+    },
+    "composite-enforced-but-not-enrolled": {
+      "title": "Two-step is mandatory for this account and it still signs in without it",
+      "scope": "active accounts the enforcement applies to",
+      "description": "{count} account(s) are in this position.\n\nThis is the combination that should not be able to exist, which is why it gets its own card: two-step enforcement reaches these accounts, the grace period has long passed, the person has signed in — and there is still no second factor.\n\nA report showing \"enforcement: pass\" next to \"N users without 2SV\" leaves the reader assuming one of the two is measured wrong. Neither is: both are true, and what sits between them is a real exception. The usual causes are an excluded organizational unit, a per-user exemption, or a sign-in path that never reaches Google's screen — IMAP, POP or an app password, which is precisely what enforcement does not cover.",
+      "remediation": "Open each account in Directory > Users > Security: check whether it has a two-step exemption and whether its organizational unit falls inside the enforcement scope. Check too whether it signs in over IMAP, POP or with an app password, none of which go through the second factor. If it is a service account, make it a real service account instead of leaving it as a user with a password.",
+      "cis": "CIS GWS §1 — Two-step verification enforced without exceptions"
+    },
+    "alert-rules": {
+      "title": "Security alert rules: who actually hears about it",
+      "scope": "tenant alert rules",
+      "description": "Of the {total} alert rules Google ships, {active} are active and {off} are switched off.\n\nThis is what separates \"Google would detect it\" from \"somebody would hear about it\". A rule that is off never fires. An active rule with no recipient files a card in the Alert Center, which is a screen nobody has open on a Tuesday afternoon.",
+      "remediation": "Admin console > Rules > System-defined rules. Switch on at least the ones for configuration changes, compromised accounts, suspicious sign-ins and devices, and give them a real recipient: a mailbox somebody reads.",
+      "cis": "CIS GWS §1 — Enable and route security alerts",
+      "description_clean": "All {total} system alert rules are active and every one of them notifies somebody. Google detects the incident and there is someone on the other end.",
+      "description_undetermined": "No alert rule could be read, so there is nothing to say about whether anyone is watching."
+    },
+    "2sv-backup-codes": {
+      "title": "Two-step verification backup codes",
+      "scope": "accounts with backup codes generated",
+      "description": "Backup codes have been generated for {count} account(s).\n\nA backup code is a printed string: it never expires, it can be read out over the phone, and it can be asked for on a phishing page exactly like a password. While one is alive it is a way in that never touches the security key — so the account is worth whatever its weaker factor is worth, and that is the paper.",
+      "remediation": "Directory > Users > the account > Security > Backup verification codes: revoke any still alive on privileged accounts. If they are needed as a break-glass path, generate them at the time and revoke them afterwards.",
+      "cis": "CIS GWS §1 — Phishing-resistant second factor on privileged accounts",
+      "description_clean": "No backup-code generation appears in the admin audit log. That is the answer you want: the codes are a paper second factor that never expires and can be phished."
+    },
+    "policy-calendar-secondary": {
+      "title": "Secondary calendars visible from outside",
+      "scope": "Admin console settings",
+      "description": "Secondary calendars — the meeting room, the team, the on-call rota — default to showing ALL event details outside the organisation, not just free/busy. And they are precisely the ones nobody reviews, because nobody feels they own them.\n\nA meeting title is often the whole secret: \"Due diligence Acme\", \"Termination – Juan\", \"Emergency board meeting\". Anyone who can read them from outside knows what the company is about to do before the staff does.",
+      "remediation": "Admin console > Apps > Google Workspace > Calendar > Sharing settings: for secondary calendars, cap external sharing at 'Free/busy information only'.",
+      "cis": "CIS GWS §5 (Calendar) — Limit external sharing to free/busy"
+    },
+    "policy-calendar-primary": {
+      "title": "Personal calendars visible from outside",
+      "scope": "Admin console settings",
+      "description": "What an outsider can see of each person's calendar. Free/busy is enough to arrange a meeting; details leak who meets whom, when, and about what.",
+      "remediation": "Admin console > Apps > Google Workspace > Calendar > Sharing settings: cap external sharing at 'Free/busy only'.",
+      "cis": "CIS GWS §5 (Calendar) — Limit external sharing to free/busy"
+    },
+    "suspended-with-tokens": {
+      "title": "Apps connected by suspended accounts",
+      "scope": "suspended accounts",
+      "description": "{count} of the {suspended} suspended accounts authorised third-party apps, and no revocation was ever recorded for them.\n\nSuspending closes the front door: that person can no longer sign in. The apps they connected are a different matter — each holds its own credential and talks to Google without them being present. It is the access path that survives an offboarding because nobody associates it with the offboarding.\n\nTo be exact: Vigía cannot look inside Google to confirm whether those credentials still work, and Google does not document what a suspension does to an OAuth token (it does document that a password change revokes them). What is on the record is that the grant was made and that no later revocation appears in the log.",
+      "remediation": "Security > API controls > Manage third-party app access: find each app and remove those accounts' access. Add it to your offboarding process alongside the suspension and the session sign-out: they are three separate actions and the suspend button only does one.",
+      "cis": "CIS GWS §3 — Remove third-party access when offboarding",
+      "description_clean": "No suspended account has third-party grants left unrevoked in the log.",
+      "description_undetermined": "There are suspended accounts, but the OAuth authorisation log could not be read, so there is nothing to say about which apps they had connected or whether those were revoked."
+    }
+  },
+  "manual": {
+    "manual-drive-sharing": {
+      "title": "Drive external sharing defaults",
+      "area": "Google Drive",
+      "why_manual": "Shown because Vigía could not read this setting automatically. Grant the read-only policy scope (reconnect) and it becomes an automatic check.",
+      "instructions": [
+        "Admin console > Apps > Google Workspace > Drive and Docs > Sharing settings.",
+        "Set 'Sharing outside your organisation' to OFF or allowlisted domains only.",
+        "Set default link sharing for new files to 'Restricted' (not 'Anyone with the link').",
+        "Enable warnings when users share files outside the organisation."
+      ],
+      "cis": "CIS GWS §4 (Drive) — Restrict external sharing"
+    },
+    "manual-gmail-forwarding": {
+      "title": "Forwarding rules set by individual users",
+      "area": "Gmail",
+      "why_manual": "The org-wide forwarding policy is read automatically once the policy scope is granted. Per-user forwarding rules would need a restricted Gmail scope, so audit those with Email Log Search.",
+      "instructions": [
+        "Admin console > Apps > Google Workspace > Gmail > End User Access.",
+        "Consider disabling 'Automatic forwarding' org-wide or per sensitive OU.",
+        "Reporting > Email Log Search: audit mail forwarded to external domains."
+      ],
+      "cis": "CIS GWS §3 (Gmail) — Restrict auto-forwarding"
+    },
+    "manual-marketplace": {
+      "title": "Google Workspace Marketplace app allowlisting",
+      "area": "Apps",
+      "why_manual": "Shown because the Marketplace allowlist could not be read automatically.",
+      "instructions": [
+        "Admin console > Apps > Google Workspace Marketplace apps > Settings.",
+        "Choose 'Allow users to install only allowlisted apps'.",
+        "Review already-installed Marketplace apps and remove unused ones."
+      ],
+      "cis": "CIS GWS §2 — Control Marketplace app installation"
+    },
+    "manual-password-policy": {
+      "title": "Password length and reuse policy",
+      "area": "Authentication",
+      "why_manual": "Shown because the password policy could not be read automatically.",
+      "instructions": [
+        "Admin console > Security > Authentication > Password management.",
+        "Set minimum length to 12+ characters and enforce at next sign-in.",
+        "Disable password reuse; avoid mandatory periodic resets (NIST guidance)."
+      ],
+      "cis": "CIS GWS §1 — Enforce strong password policy"
+    },
+    "manual-gmail-routing": {
+      "title": "Gmail routing rules and outbound gateway",
+      "area": "Gmail",
+      "why_manual": "The Policy API does not expose routing rules, so this cannot be checked automatically, not even by asking for more permissions. It is worth the minute it costs: a malicious routing rule is exfiltration that survives a password change, a sign-out of every session and turning on 2-Step Verification. It keeps copying the mail until somebody looks at this screen, and nobody ever looks at it.",
+      "instructions": [
+        "Admin console > Apps > Google Workspace > Gmail > Routing.",
+        "Go through the 'Routing', 'Recipient address map' and 'Default routing' rules one by one: any rule that copies or diverts mail to a domain that is not yours must have an owner and a written reason.",
+        "Look at 'Outbound gateway': if an external SMTP server is configured, confirm it is yours and not a relay somebody left behind.",
+        "Check 'Content compliance' too, in case there is a rule sending a silent copy of messages that match some pattern.",
+        "If you find something you do not recognise, do not simply delete it: note who created it and when (it is in the audit log) before removing it."
+      ],
+      "cis": "CIS GWS §2 (Gmail) — Review routing and outbound gateways"
+    },
+    "manual-imap-pop": {
+      "title": "IMAP and POP access to Gmail",
+      "area": "Gmail",
+      "why_manual": "Vigía does ask for and hold the permission to read this setting, and the identifier is the one Google documents (gmail.imap_access and gmail.pop_access). What is going on is something else: your organisation has never set an explicit policy for them, and Google — unlike almost every other setting — neither publishes what the default value is nor returns it over the API. There is nothing to read, so saying 'allowed' or 'blocked' would be making it up. It takes a minute to look by hand.",
+      "instructions": [
+        "Admin console > Apps > Google Workspace > Gmail > End User Access.",
+        "Look at 'IMAP access' and 'POP access'. Turn both off if nobody uses a desktop mail client; it is very rarely needed.",
+        "If you do need IMAP, restrict it to OAuth-approved mail clients rather than leaving it open to any client.",
+        "Important: both of these routes sign in with a username and password without going through the 2-Step Verification challenge, so leaving them open cancels out much of what 2SV gives you."
+      ],
+      "cis": "CIS GWS §2 (Gmail) — Disable legacy access protocols"
+    }
+  },
+  "dns": {
+    "comillas": "'{valor}'",
+    "spf": {
+      "sin_registro": "No SPF record is published.",
+      "varios_registros": "There are {count} SPF records published: having several is invalid (permerror) and receivers may ignore SPF altogether.",
+      "all_permisivo": "'+all' authorises ANY sender on the internet: that cancels out SPF's protection.",
+      "all_neutro": "'?all' is neutral; '~all' or '-all' is better.",
+      "sin_all": "The record has neither an 'all' mechanism nor a 'redirect': the policy is incomplete.",
+      "terminos_primer_nivel": "~{count} DNS-lookup terms at the top level; SPF allows 10 in total (permerror risk).",
+      "limite_consultas": "{lookups} DNS lookups, above the RFC 7208 limit of {limit}: receivers return permerror and stop evaluating SPF.",
+      "sin_determinar": "The DNS lookup failed: the state of SPF could not be determined.",
+      "no_encontrado": "No SPF record was found. Anyone can spoof mail from this domain.",
+      "fail_all_permisivo": "SPF ends in '+all': in practice, no protection.",
+      "fail_varios": "The SPF record is invalid (there are several records): receivers may ignore it.",
+      "fail_limite": "SPF is over the limit of {limit} lookups ({lookups}): receivers return permerror, so SPF is not evaluated at all.",
+      "debilidades": "An SPF record exists, but it has weaknesses worth fixing.",
+      "correcto": "SPF record found, ending in '{qualifier}all'."
+    },
+    "selector": {
+      "demasiados": "That is too many: at most {max} selectors. If you sign with more, write to me and we will look at it.",
+      "con_puntos": "'{token}' has dots in it. Write the selector only, without the rest of the name: 'zoho2', not 'zoho2._domainkey.yourdomain.com'.",
+      "con_guion_bajo": "'{token}' has underscores in it. The tool adds the '_domainkey' part; only the selector goes here.",
+      "con_espacios": "'{token}' has spaces in it. Separate several selectors with commas.",
+      "empieza_por_numero": "'{token}' starts with a number, and a selector starts with a letter.",
+      "caracteres_invalidos": "'{token}' has characters that are not allowed ({malos}). A selector contains only letters, numbers and hyphens."
+    },
+    "dkim": {
+      "clave_vacia": "Selector '{selector}' publishes an empty key (p=): the key is revoked.",
+      "aviso_otro_selector": "Careful: there is nothing at {nombres}, so the key you use is not where you thought it was.",
+      "sufijo_bits": " ({bits}-bit key)",
+      "warn_problemas": "DKIM key found at selector '{selector}', but with problems.{aviso}",
+      "warn_bits": "DKIM key found at selector '{selector}', but it is only {bits} bits; the current minimum is 2048.{aviso}",
+      "encontrada": "DKIM key found at selector '{selector}'{sufijo}.{aviso}",
+      "sin_determinar": "The DNS lookup failed: the state of DKIM could not be determined.",
+      "un_selector": "the selector",
+      "varios_selectores": "the selectors",
+      "fail_declarado": "There is no DKIM key at {plural} you gave ({nombres}). The record is not published, or it is misspelled, or it sits under a name other than '<selector>._domainkey'.",
+      "aviso_comodin": "Careful: this domain has a TXT wildcard, so the name answers even when there is no key.",
+      "probado_uno": "the selector probed ({tried})",
+      "probados_varios": "the {count} selectors probed ({tried})",
+      "no_verificado": "DKIM not verified: no key was found at {probados}. This check does not find a domain that signs with a selector of its own, so this does not mean that you do not sign; it is verified by hand by writing to diego@diegofarina.com."
+    },
+    "dmarc": {
+      "sin_registro": "No DMARC record is published.",
+      "varios_registros": "There are {count} DMARC records published: having several is invalid and receivers will ignore DMARC.",
+      "sin_p": "The mandatory 'p' tag is missing or invalid: the record cannot be enforced.",
+      "pct_invalido": "Invalid pct value: {valor}.",
+      "pct_parcial": "pct={pct}: the policy applies to only {pct}% of the mail.",
+      "sin_rua": "There is no 'rua' reporting address: you receive no visibility reports.",
+      "rua_ajena": "The aggregate reports go only to an external address, so you never see your own spoofing telemetry. Add an address at your own domain to the 'rua' tag.",
+      "sin_determinar": "The DNS lookup failed: the state of DMARC could not be determined.",
+      "no_encontrado": "There is no DMARC record. Spoofed mail from this domain is not controlled.",
+      "fail_varios": "Several DMARC records: this is invalid and receivers ignore DMARC.",
+      "fail_sin_politica": "There is a DMARC record, but no valid policy (p=).",
+      "fail_none": "The DMARC policy is p=none: it only monitors, spoofed mail is still delivered.",
+      "warn_quarantine": "DMARC at p=quarantine: good; move to p=reject once the reports come back clean.",
+      "warn_pct": "DMARC at p=reject but with pct={pct}: enforcement is partial.",
+      "correcto": "The DMARC policy is p=reject at 100%: it is fully enforced."
+    },
+    "mta_sts": {
+      "sin_determinar": "The DNS lookup failed: the state of MTA-STS could not be determined.",
+      "correcto": "MTA-STS policy published: inbound mail requires valid TLS.",
+      "ausente": "There is no MTA-STS policy. An attacker sitting on the network can downgrade mail addressed to this domain to plain text."
+    },
+    "tls_rpt": {
+      "sin_determinar": "The DNS lookup failed: the state of TLS-RPT could not be determined.",
+      "correcto": "TLS-RPT published: you receive reports when TLS delivery fails.",
+      "ausente": "There is no TLS-RPT record, so TLS delivery failures go unnoticed."
+    },
+    "dnssec": {
+      "sin_determinar": "Whether DNSSEC is enabled could not be determined.",
+      "correcto": "DNSSEC is enabled: this domain's DNS answers are signed.",
+      "ausente": "DNSSEC is not enabled. An attacker at resolver level can forge the DNS answers, including your own SPF, DKIM and DMARC records."
+    }
+  },
+  "proyeccion": {
+    "cobertura": {
+      "users": "users",
+      "domains": "domains",
+      "token": "OAuth authorisations",
+      "admin": "admin events",
+      "login": "sign-in events",
+      "policies": "console settings",
+      "un_dia": "{n} day",
+      "varios_dias": "{n} days",
+      "ventana": " over {dias}",
+      "parcial": " — partial coverage in {detalle}",
+      "parcial_detalle": "{nombre}: {dias} of {maximo} days"
+    },
+    "severidad": {
+      "critical": "critical",
+      "high": "high",
+      "medium": "medium",
+      "low": "low",
+      "info": "info"
+    },
+    "cambio": {
+      "new": "new",
+      "worse": "has got worse",
+      "improved": "has improved",
+      "resolved": "resolved",
+      "coverage_gained": "could not be checked before",
+      "coverage_lost": "can no longer be checked",
+      "same": "no change",
+      "baseline": "first scan",
+      "cuenta": "{etiqueta} (from {desde} to {hasta})",
+      "severidad": "{etiqueta} (severity from {desde} to {hasta}{sufijo})",
+      "por_regresion": " through regression",
+      "ahora_si": "{etiqueta}; now it can, and the result is {resultado}"
+    },
+    "puntuacion": {
+      "titular": "{ahora} (was {antes})",
+      "cobertura_ganada_una": "{delta} because {n} more thing can be checked now",
+      "cobertura_ganada_varias": "{delta} because {n} more things can be checked now",
+      "cobertura_perdida_una": "{delta} because {n} thing can no longer be checked",
+      "cobertura_perdida_varias": "{delta} because {n} things can no longer be checked",
+      "exposicion": "{delta} from changes in your organisation",
+      "sin_efecto_uno": "{n} change in your organisation, with no effect on the score",
+      "sin_efecto_varios": "{n} changes in your organisation, with no effect on the score",
+      "sin_cambios": "no change in your organisation"
+    }
+  },
+  "remediation": {
+    "enforce_2sv_org": {
+      "title": "Enforce 2-Step Verification across the whole organisation",
+      "console_path": "Security > Authentication > 2-Step Verification > Enforcement",
+      "user_impact": "Anyone without a second factor set up is locked out until they register one. Warn people first and use the new user enrollment period Google offers; enrol the admins by hand before you turn enforcement on."
+    },
+    "suspend_unused_admins": {
+      "title": "Suspend or remove privileges from the admin accounts nobody uses",
+      "console_path": "Directory > Users (filtered by admin role)"
+    },
+    "suspend_never_used": {
+      "title": "Suspend the accounts that have never signed in",
+      "console_path": "Directory > Users > 'Never logged in' filter"
+    },
+    "suspend_dormant": {
+      "title": "Suspend the accounts with no recent sign-in",
+      "console_path": "Directory > Users > sort by last sign-in",
+      "user_impact": "Confirm it with each manager first: suspending an account that is still in use locks that person out immediately."
+    },
+    "replace_shared_accounts": {
+      "title": "Replace shared mailboxes with groups or delegated access",
+      "console_path": "Directory > Groups",
+      "user_impact": "Anyone using the shared password will have to move to their own account."
+    },
+    "reduce_super_admins": {
+      "title": "Reduce super admins to 2-4 and move the rest to delegated roles",
+      "console_path": "Account > Admin roles",
+      "user_impact": "Anyone who loses the super-admin role will no longer be able to change settings that affect the whole domain."
+    },
+    "reset_compromised_accounts": {
+      "title": "Reset credentials and revoke sessions on the flagged accounts",
+      "console_path": "Directory > Users > (account) > Reset password / Sign out",
+      "user_impact": "Those people are signed out of every device and will have to set a new password."
+    },
+    "restrict_app_access": {
+      "title": "Set third-party app access to 'restricted' and block the ones you don't recognise",
+      "console_path": "Security > Access and data control > API controls > App access control",
+      "user_impact": "Apps people already use will stop working until you mark them as trusted. Review the list of already-authorised apps first."
+    },
+    "review_dwd": {
+      "title": "Review every domain-wide delegation client and remove the ones you don't recognise",
+      "console_path": "Security > Access and data control > API controls > Domain-wide delegation",
+      "user_impact": "Integrations that depend on a removed client will stop working."
+    },
+    "publish_spf": {
+      "title": "Publish a valid SPF record on every domain that sends mail",
+      "console_path": "Your DNS provider (TXT record on the root domain)",
+      "user_impact": "Make sure you have the complete list of senders before ending in -all, or legitimate mail from some tool you have forgotten will start bouncing."
+    },
+    "enable_dkim": {
+      "title": "Turn on DKIM signing and publish the key",
+      "console_path": "Apps > Google Workspace > Gmail > Authenticate email"
+    },
+    "publish_dmarc": {
+      "title": "Publish DMARC, starting at p=none with reporting",
+      "console_path": "Your DNS provider (TXT record at _dmarc.<domain>)",
+      "user_impact": "At p=none it is harmless. Move to quarantine or reject only when the reports show your own mail passes validation; otherwise you will block your own senders."
+    },
+    "publish_mta_sts": {
+      "title": "Publish an MTA-STS policy to require valid TLS on inbound mail",
+      "console_path": "Your DNS provider + a static file at mta-sts.<domain>",
+      "user_impact": "In 'enforce' mode, senders refuse to deliver if the certificates on your MX hosts are wrong. Start in 'testing' mode."
+    },
+    "publish_tls_rpt": {
+      "title": "Publish a TLS-RPT record to receive reports of TLS failures",
+      "console_path": "Your DNS provider (TXT at _smtp._tls.<domain>)"
+    },
+    "enable_dnssec": {
+      "title": "Enable DNSSEC and add the DS record at your registrar",
+      "console_path": "Your DNS provider, then your registrar",
+      "user_impact": "A wrong DS record leaves the whole domain unresolvable. Verify the chain right after enabling it."
+    },
+    "restrict_drive_sharing": {
+      "title": "Restrict Drive sharing outside the organisation",
+      "console_path": "Apps > Google Workspace > Drive and Docs > Sharing settings",
+      "user_impact": "People will no longer be able to share files with external collaborators (or only with allowlisted domains). Check who needs it first."
+    },
+    "disable_auto_forwarding": {
+      "title": "Turn off automatic mail forwarding to external addresses",
+      "console_path": "Apps > Google Workspace > Gmail > End User Access",
+      "user_impact": "Forwarding rules that already exist will stop working: check that nobody depends on one."
+    },
+    "strengthen_password_policy": {
+      "title": "Require passwords of 12+ characters and disallow reuse",
+      "console_path": "Security > Authentication > Password management",
+      "user_impact": "Anyone with a shorter password will be asked to change it at their next sign-in."
+    },
+    "set_session_limit": {
+      "title": "Set a maximum web session length",
+      "console_path": "Security > Access and data control > Google session control",
+      "user_impact": "People will have to sign in again more often."
+    },
+    "restrict_marketplace": {
+      "title": "Allow only the allowlisted Marketplace apps",
+      "console_path": "Apps > Google Workspace Marketplace apps > Settings",
+      "user_impact": "Users will no longer be able to install Marketplace apps on their own."
+    },
+    "restrict_groups_external": {
+      "title": "Make Google Groups private to the organisation",
+      "console_path": "Apps > Google Workspace > Groups for Business > Sharing settings",
+      "user_impact": "External members will no longer be able to read or post in the groups."
+    },
+    "delete_suspended": {
+      "title": "Transfer the data and delete the suspended people who have left",
+      "console_path": "Directory > Users > 'Suspended' filter",
+      "user_impact": "Deletion is permanent: transfer Drive and mail first."
+    }
+  },
+  "email": {
+    "solo_lectura": {
+      "lead": "Read-only by design.",
+      "claim": "Vigía has never requested Gmail, Drive or any other restricted permission, so it cannot read the content of messages or files: Google's own API prevents it, not just our policy.",
+      "escaneo_sin_cambios": "This scan has not modified any Workspace setting."
+    },
+    "alerta": {
+      "criticos_nuevos_uno": "{n} new CRITICAL finding",
+      "criticos_nuevos_varios": "{n} new CRITICAL findings",
+      "nuevos_uno": "{n} new finding",
+      "nuevos_varios": "{n} new findings",
+      "asunto_empeorado": "The posture has got worse",
+      "asunto_cobertura_perdida": "{count} check(s) can no longer be done",
+      "asunto_informe": "Scan report",
+      "asunto_puntuacion_al_alza": "Changes with the score up ({total})",
+      "cabecera": "Security posture scan of {dominio}",
+      "puntuacion": "Score: {valor}/100{delta}",
+      "sin_puntuacion": "N/A",
+      "delta_anterior": " ({cambio} compared with the previous scan)",
+      "sin_comparativa": " (no comparison: the set of checks has changed)",
+      "problemas_abiertos": "Open problems: {detalle}",
+      "recuento": {
+        "critical": "critical",
+        "high": "high",
+        "medium": "medium",
+        "low": "low"
+      },
+      "severidad": {
+        "critical": "CRITICAL",
+        "high": "HIGH",
+        "medium": "MEDIUM",
+        "low": "LOW",
+        "info": "INFO"
+      },
+      "y_mas": "  … and {n} more",
+      "titulo_porque": "WHY THE SCORE MOVED",
+      "titulo_nuevos": "NEW PROBLEMS",
+      "titulo_empeorado": "GOT WORSE IN YOUR ORGANISATION",
+      "titulo_resueltos": "RESOLVED SINCE THE LAST SCAN",
+      "titulo_cobertura_ganada": "COULD NOT BE CHECKED BEFORE, AND NOW THEY CAN",
+      "nota_cobertura_ganada": "  (this is not a change in your organisation: it is what Vigía can see)",
+      "cobertura_abierta_uno": "  Of those, {n} has turned out to be an open problem. It is not new:",
+      "cobertura_abierta_varios": "  Of those, {n} have turned out to be an open problem. It is not new:",
+      "nota_invisible": "  it was invisible, not non-existent.",
+      "titulo_cobertura_perdida": "VIGÍA CAN NO LONGER CHECK",
+      "nota_cobertura_perdida": "  (this is not a change in your organisation either; it may be a revoked scope or a Google rate limit)",
+      "informe_completo": "Full report: {url}",
+      "firma": "— Vigía (read-only Google Workspace posture scanner)"
+    },
+    "outreach": {
+      "mecanismos": {
+        "spf": {
+          "etiqueta": "SPF (who is allowed to send on your behalf)",
+          "arreglo": "Publish or fix the domain's SPF TXT record, including every service that sends on your behalf and ending it in '-all' once you are sure the list is complete. Watch the RFC 7208 limit of 10 DNS lookups: going over it invalidates the whole record."
+        },
+        "dkim": {
+          "etiqueta": "DKIM (cryptographic signature on your messages)",
+          "arreglo": "Turn on DKIM signing at your mail provider and publish its public key as a TXT record at '<selector>._domainkey'. The current minimum is 2048 bits."
+        },
+        "dmarc": {
+          "etiqueta": "DMARC (what to do with mail that fails)",
+          "arreglo": "Publish a '_dmarc' TXT record with 'v=DMARC1; p=quarantine;' and a 'rua=' address of yours to receive the reports. Move up to 'p=reject' once the reports confirm nothing legitimate is failing."
+        },
+        "mta_sts": {
+          "etiqueta": "MTA-STS (enforced encryption in transit)",
+          "arreglo": "Publish the '_mta-sts' TXT record and the policy file at 'https://mta-sts.<domain>/.well-known/mta-sts.txt' so that the servers writing to you require TLS and refuse a downgrade to plain text."
+        },
+        "tls_rpt": {
+          "etiqueta": "TLS-RPT (reporting of encryption failures)",
+          "arreglo": "Publish a '_smtp._tls' TXT record with a 'rua=' address so you hear about encryption failures on delivery instead of discovering them by chance."
+        },
+        "dnssec": {
+          "etiqueta": "DNSSEC (integrity of your DNS answers)",
+          "arreglo": "Enable DNSSEC at the domain's registrar. Without it, whoever controls a resolver can forge the DNS answers, including the SPF and DMARC records everything above rests on."
+        }
+      },
+      "puntos_uno": "{n} point",
+      "puntos_varios": "{n} points",
+      "asunto_un_dominio": "Email authentication for {dominio}: {puntos} to review",
+      "asunto_varios_dominios": "Email authentication for {n} domains: {puntos} to review",
+      "saludo": "Hello,",
+      "intro": "I have reviewed the public email authentication settings for {dominios} and found a few points worth looking at. I am passing them on in case they are useful.\n\nEverything that follows comes EXCLUSIVELY from public DNS records, the same ones anybody can look up. I have not accessed any system of yours, I have not sent mail to your mailboxes and I have not attempted any access: I have only resolved the domain's records. Checked on {fecha}.",
+      "dominio": "DOMAIN: {dominio}",
+      "proveedor": "   (mail provider detected: {proveedor})",
+      "nada_que_senalar": "\nI found nothing to flag: SPF, DKIM, DMARC and the rest of the records I was able to check are in order. Congratulations, that is rarer than it sounds.",
+      "etiqueta_problema": "PROBLEM",
+      "etiqueta_aviso": "WARNING",
+      "como_se_arregla": "   How to fix it: {arreglo}",
+      "titulo_workspace": "CHECK YOUR GOOGLE WORKSPACE TOO",
+      "workspace_oferta": "Everything above is only what can be seen from outside, in DNS. If you use Google Workspace, at https://diegofarina.com/vigia you can get an automatic, complete report on the domain's security: accounts without 2-Step Verification, more super admins than you need, unused accounts still open, third-party apps with access to your data, Drive and Gmail policies, and a score with what is worth fixing first.",
+      "workspace_solo_lectura": "You connect the administrator account with READ-ONLY permissions. Vigía cannot modify a single setting in your Workspace, and it never asks for access to the content of Gmail or Drive: it only reads the configuration. Access can be revoked whenever you like from the Google account itself.",
+      "workspace_sin_conectar_nada": "And if you would rather check what I describe above yourselves without connecting anything, the SPF, DKIM and DMARC tool is public and asks for no access at all: https://diegofarina.com/vigia/dmarc-checker",
+      "titulo_importa": "WHY IT MATTERS",
+      "cuerpo_importa": "SPF, DKIM and DMARC are what stops somebody sending mail while pretending to be your domain. When they are missing or half-done, an attacker can write to your customers, to your suppliers or to your own team from an address that looks like yours, and the message lands in the inbox. It is the basis of most invoice fraud and executive impersonation.",
+      "firma": "This is {nombre} <{correo}> writing.",
+      "baja": "If you would rather not hear from me again, reply 'UNSUBSCRIBE' to {baja} and I will not write to you any more. If you would prefer me to speak to somebody else on your team, tell me who.",
+      "generado": "Report generated with Vigía."
+    }
+  },
+  "report": {
+    "cuenta": "account",
+    "cuentas": "accounts",
+    "hallazgo": "finding",
+    "hallazgos": "findings",
+    "critico": "critical",
+    "criticos": "critical",
+    "alto": "high",
+    "altos": "high",
+    "cuentas_en_riesgo": "{cuentas} at risk",
+    "de_ellas_graves": "{n} of them with a critical or high problem",
+    "sin_exposicion_de_cuentas": "No account-level exposure was found.",
+    "puntuacion_postura": "posture score",
+    "delta_anterior": "{flecha} {n} versus the previous scan",
+    "sin_cambios_anterior": "no change versus the previous scan",
+    "arregla_primero": "Fix this first",
+    "arregla_primero_nota": "Ordered by findings closed per minute of work, not by severity. Doing these three things, in this order, removes the most exposure for the least effort.",
+    "accion_numero": "ACTION {n}",
+    "impacto": "Impact",
+    "impacto_frase": "closes {hallazgos}{severidades}, affects {cuentas}{ganancia}.",
+    "ganancia_puntuacion": ", score +{n}",
+    "esfuerzo": "Effort",
+    "minutos": "about {n} minutes",
+    "aviso_usuarios": "Warning for users",
+    "cambios_titulo": "Changes since the previous scan",
+    "cambios_motor": "The set of checks has changed since the last analysis: the results are not comparable, so no difference is calculated. Engine {antes} → {ahora}. The comparison returns with the next scan, which will already use the same set as this one.",
+    "desconocido": "unknown",
+    "primer_escaneo": "First scan: no comparison is available yet. The next scan will show what is new, what got worse and what has been resolved.",
+    "nuevos": "New",
+    "empeorados": "Worse",
+    "resueltos": "Resolved",
+    "cambios_organizacion": "Changes in your organisation",
+    "cobertura_titulo": "Changes in what Vigía can see",
+    "cobertura_nota": "These are <strong>not</strong> changes in your organisation. They are checks that could not be made before and now can, or the other way round: a scope granted or revoked, or a limit of Google's API. They are listed separately precisely so they are not mistaken for an improvement or a worsening of your posture.",
+    "antes_no_comprobables": "Could not be checked before",
+    "con_problema_abierto": "{n} with an open problem",
+    "ya_no_comprobables": "Can no longer be checked",
+    "flag_nuevo": "NEW",
+    "flag_ahora_visible": "NOW VISIBLE",
+    "flag_ya_no_comprobable": "NO LONGER CHECKABLE",
+    "flag_regresion": "REGRESSION",
+    "afectados": "Affected ({n})",
+    "y_mas": "… and {n} more",
+    "direcciones_borradas": "The addresses were deleted under the {horas}-hour retention policy. Re-scan to see them.",
+    "valor_actual": "Current value",
+    "como_mantenerlo": "How to keep it",
+    "como_se_arregla": "How to fix it",
+    "alcance": "Scope",
+    "no_confirmado": "This check could not be confirmed, so it never counts towards the score, neither for nor against.",
+    "personas_riesgo": "People at risk ({n})",
+    "personas_orden": "Sorted by combined severity.",
+    "personas_apiladas": "{n} of them carry more than one problem at once: they are the accounts an attacker only has to get right once.",
+    "col_peor": "Worst",
+    "col_cuenta": "Account",
+    "col_problemas": "Problems",
+    "col_aparece_en": "Appears in",
+    "registros_correo_dns": "Email and DNS records",
+    "dominio_workspace": "Workspace domain",
+    "dominio_manual": "added manually",
+    "col_comprobacion": "Check",
+    "col_estado": "Status",
+    "col_detalle": "Detail",
+    "col_cambio": "Change",
+    "col_hallazgos": "Findings",
+    "col_comprobaciones": "Checks",
+    "spf_consultas": "DNS lookups: {n} of the RFC 7208 limit of 10",
+    "spf_sobre_limite": "over the limit: receivers return permerror and stop evaluating SPF",
+    "spf_mecanismo_final": "final mechanism: {mecanismo}",
+    "dkim_tamano_clave": "key size: {bits} bits",
+    "dkim_clave_debil": "weak, rotate to 2048 or more",
+    "dkim_clave_adecuada": "adequate",
+    "no_verificado": "Not verified.",
+    "dkim_selector_no_encontrado": "{selectores} was tried, which is the selector Workspace uses. This check does not find a domain that signs with a selector of its own; that does not mean you are not signing. Write to me and we verify it by hand.",
+    "dmarc_destino_propio": "your own domain",
+    "dmarc_destino_tercero": "only to a third party: you never see your own telemetry",
+    "dmarc_destino_ninguno": "nowhere: no rua tag, so there are no reports",
+    "dmarc_politica": "policy: p={p}",
+    "sin_definir": "not set",
+    "dmarc_alineacion": "alignment: DKIM {dkim}, SPF {spf}",
+    "alineacion_estricta": "strict",
+    "alineacion_relajada": "relaxed",
+    "dmarc_informes_van_a": "reports go to: {destino}",
+    "puntuacion_calculo": "How the score was calculated",
+    "pesos_y_credito": "Severity weights: {pesos}. Credit: pass 100%, warn 50%, fail 0%. The score is split into two blocks that read differently:",
+    "bloque_ajustes": "<strong>Organisation settings</strong> (Admin console, DNS, audit log, third-party apps): each one counts <strong>once only</strong>. It is one administrator's decision, not a failure by each employee, and counting it per head made a single switch weigh as much as the entire payroll.",
+    "bloque_cuentas": "<strong>Accounts</strong>: each person counts once only, at the worst severity they appear in, so somebody with several weaknesses is one exposure and not four.",
+    "escala_cuentas": "In this tenant the accounts block was scaled down to {porcentaje} of its raw weight so it cannot outweigh the settings one: otherwise, in a large organisation the configuration would be reduced to a decimal place just for having more staff.",
+    "excluidos_de_la_puntuacion": "Informational, manual and unverified findings are excluded entirely: uncertainty never adds and never subtracts.",
+    "col_elemento": "Item",
+    "col_severidad": "Severity",
+    "col_peso": "Weight",
+    "col_obtenido": "Earned",
+    "col_de": "From",
+    "total": "Total",
+    "puntuacion_sobre_cien": "score {n}/100",
+    "tambien_en": "(+{n} more)",
+    "correo_asunto": "Vigía — fixing the findings for {dominio}",
+    "correo_cuerpo": "Hello Diego,\n\nI have run the Vigía report on {dominio}{puntuacion}.\n\nI would like to talk about remediation.\n\n",
+    "correo_puntuacion": " (score {n}/100)",
+    "arreglamos_titulo": "Would you like us to fix it?",
+    "arreglamos_intro": "This report says what is wrong and where it is changed. If you would rather it were done by somebody who has done this before, I do it with you:",
+    "arreglamos_auditoria": "<strong>A walk-through of the report with you</strong>: we go finding by finding through what applies to your case and what does not. Not everything critical is critical for every organisation.",
+    "arreglamos_criticos": "<strong>Fixing the critical and high findings</strong>, in your Admin console, with you watching and every change explained.",
+    "arreglamos_sesion": "<strong>A session with whoever runs IT</strong> in-house, so somebody is left there who knows how to keep it up, rather than a dependency on me.",
+    "arreglamos_documentacion": "<strong>Documentation</strong> of what was changed and why, which also serves you for audits and for customers who ask you for it.",
+    "arreglamos_repeticion": "And if you want, <strong>we repeat the review every so often</strong>: that is what stops you ending up back where you started in six months.",
+    "arreglamos_precio": "Write to me and I answer you myself. The price depends on what needs doing, so we discuss it by e-mail with the report in front of us.",
+    "datos_analizados": "Data analysed",
+    "resumen_direccion": "Executive summary",
+    "resumen_lead": "read-only analysis of Google Workspace. This page reads in a minute; the technical detail comes afterwards.",
+    "puntuacion_sobre_100": "score out of 100",
+    "cuentas_realmente_en_riesgo": "accounts genuinely at risk",
+    "sin_problemas_abiertos": "No open problems were found.",
+    "lo_mas_grave": "The worst of it, in three sentences",
+    "por_donde_empezar": "Where to start",
+    "cierra_hallazgos": "closes {hallazgos}",
+    "nada_pendiente": "Nothing outstanding.",
+    "titulo_documento": "Vigía report — {dominio}",
+    "guardar_pdf": "<strong>To save it as a PDF:</strong> press Ctrl+P (⌘P on Mac) and choose “Save as PDF”. Leave the “Background graphics” option on so the severity colours survive. This notice does not appear in the printed version.",
+    "informe_postura": "Security posture report",
+    "escaneado_el": "Scanned on {fecha} · read-only analysis of Google Workspace · content scopes for Gmail and Drive were never requested",
+    "ajustes_organizacion": "Organisation settings ({n})",
+    "ajustes_organizacion_nota": "Tenant configuration: an administrator decides it in the Admin console and it affects everybody alike. It is not any one person's failure.",
+    "hallazgos_por_cuenta": "Account-level findings ({n})",
+    "hallazgos_por_cuenta_nota": "Things that are true of specific people: no second factor, never signed in, admin privileges, recovery set up badly, access from a new country.",
+    "comprobaciones_manuales": "Manual checks ({n})",
+    "comprobaciones_manuales_nota": "Vigía could not read these settings automatically, so verify them by hand. They leave this list as soon as an automatic check can confirm them.",
+    "comprobacion_manual": "Manual check",
+    "generado_por": "Report generated by Vigía",
+    "motor": "engine {version}",
+    "csv": {
+      "id": "id",
+      "titulo": "title",
+      "severidad": "severity",
+      "estado": "status",
+      "alcance": "scope",
+      "ventana_leida": "window_read",
+      "cambio": "change",
+      "regresion": "regression",
+      "num_afectados": "affected_count",
+      "afectados": "affected",
+      "cuentas": "accounts",
+      "control_cis": "cis_control",
+      "remediacion": "remediation"
+    },
+    "csv_direcciones_borradas": "(addresses deleted: {horas} h retention)"
+  },
+  "executive": {
+    "cuenta": "account",
+    "cuentas": "accounts",
+    "cuenta_compartida": "shared account",
+    "cuentas_compartidas": "shared accounts",
+    "plain": {
+      "composite-superadmin-no-2sv-no-recovery": "{cuentas} with full control of the domain have no second factor and no way back in: if the password of any one of them is stolen, control of the company's email is lost and there is no quick way to recover it.",
+      "composite-superadmin-dormant-no-2sv": "{cuentas} with full control of the domain are not in use and have no second factor. Nobody is watching them and nobody would notice somebody getting in.",
+      "composite-superadmin-no-2sv": "{cuentas} that can change anything in the organisation get in with nothing but a password. A password is stolen with one well-made phishing email.",
+      "recovery-super-admins": "{n} of the accounts with the most permissions have no safe way back: if they are lost, the only route in is Google support, which takes days.",
+      "composite-enforced-but-not-enrolled": "{cuentas} get around the second-factor requirement the organisation itself has switched on: the rule exists and some people are not following it.",
+      "composite-dormant-no-2sv": "{cuentas} that are unused and have no second factor are still active. They are the ones an attacker prefers, because nobody is going to notice the activity.",
+      "composite-service-account-no-2sv": "{compartidas} or service accounts get in with nothing but a password, and that password is usually in a document plenty of people have seen.",
+      "composite-superadmin-dormant": "{cuentas} with full control have gone months without being used. If nobody needs them, every day they stay open is risk with nothing in return.",
+      "2sv-users": "{n} people get into their work email with nothing but a password. It is the route most email incidents come in by.",
+      "admin-login-new-country": "{cuentas} with full control of the domain have been used from a country they had never been used from before. It may be a trip, or it may not.",
+      "policy-2sv-methods": "The second factor accepts a code by text message, which is intercepted by cloning the mobile's card. It protects less than people believe it does.",
+      "policy-gmail-forwarding": "Anybody can set their work email to be copied automatically to an outside address, and it keeps being copied after they leave the company.",
+      "policy-drive-sharing": "Any document in the organisation can be shared with somebody outside in two clicks, with nobody finding out and no warning left behind.",
+      "policy-password": "The passwords allowed are shorter than is advisable, which puts them within reach of an automated trial-and-error attack.",
+      "policy-marketplace": "Anybody can connect a third-party application to the company's data without an administrator approving it.",
+      "policy-groups-sharing": "The internal mailing lists can be reached from outside the organisation, with years of conversations nobody has reviewed.",
+      "oauth-high-risk": "There are third-party applications with broad access to the company's email and files. If one of them suffers a breach, it is a breach of yours.",
+      "oauth-dwd": "There are applications that can act in the name of any employee without that person authorising it or even knowing.",
+      "email-spf": "Anybody can send email pretending to be your domain, and it will look genuine to whoever receives it.",
+      "email-dmarc": "You are not telling mail servers what to do with the fake messages that use your domain, so many of them deliver those anyway.",
+      "audit-risky-changes": "Configuration changes with an impact on security have been made. It does not mean they are malicious, but somebody should confirm they are theirs.",
+      "super-admin-count": "There are {n} people with full control of the domain. Each one is a master key, and each master key is a way of losing everything."
+    },
+    "frase_generica": "{titulo} — affects {n}.",
+    "criticos": "{n} critical",
+    "criticos_desglose": ", {fallos} failing and {avisos} warning",
+    "criticos_en_fallo": " failing",
+    "ninguno_critico": "none critical",
+    "cierre_limpio": "There is nothing urgent. What is left are settings worth tightening when there is a moment, not things to lose sleep over.",
+    "cierre_criticos": "If nothing is touched: {criticos} of these problems are classified as critical, and all of them share the same consequence — that one stolen password is enough to control the organisation's email. No sophisticated attack is needed; one person taking the bait once is enough. The {ajustes} configuration settings still pending are, on top of that, the ones that decide how far whoever gets in can go.",
+    "cierre_sin_criticos": "If nothing is touched: {cuentas} and {ajustes}. Neither is an emergency today, but each one widens what somebody who gets in by any other route can do.",
+    "cierre_sin_criticos_sin_ajustes": "If nothing is touched: {cuentas}. It is not an emergency today, but it widens what somebody who gets in by any other route can do.",
+    "cuentas_expuestas_uno": "there is {n} exposed account",
+    "cuentas_expuestas_varios": "there are {n} exposed accounts",
+    "ajustes_flojos_uno": "{n} organisation setting left loose",
+    "ajustes_flojos_varios": "{n} organisation settings left loose"
+  }
+}

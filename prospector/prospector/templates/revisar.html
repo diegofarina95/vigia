@@ -1,0 +1,109 @@
+{% extends "base.html" %}{% block titulo %}Revisar{% endblock %}
+{% block contenido %}
+<h1>Revisar <span class="cuenta">{{ filas|length }}</span></h1>
+
+<form class="filtros" method="get">
+  <input type="search" name="q" value="{{ q }}" placeholder="dominio o empresa">
+  <select name="hallazgo">
+    <option value="">— cualquier hallazgo —</option>
+    {% for h in hallazgos %}<option value="{{ h }}" {{ 'selected' if h == hallazgo }}>{{ h }}</option>{% endfor %}
+  </select>
+  <select name="orden">
+    {% for clave, etiqueta in [('severidad','severidad'),('puntuacion','puntuación'),('dominio','dominio'),('hallazgo','hallazgo')] %}
+      <option value="{{ clave }}" {{ 'selected' if orden == clave }}>ordenar por {{ etiqueta }}</option>
+    {% endfor %}
+  </select>
+  <button>Filtrar</button>
+  {% if q or hallazgo %}<a class="limpiar" href="{{ url_for('revisar') }}">limpiar</a>{% endif %}
+</form>
+
+{% if filas %}
+<form method="post" action="{{ url_for('aprobar_lote') }}" id="lote"
+      onsubmit="return confirmarLote(this)">
+  <p class="acciones-lote">
+    <label><input type="checkbox" id="todos"> seleccionar los {{ filas|length }} visibles</label>
+    <button class="principal">Aprobar seleccionados</button>
+    <span class="nota">Aprobar no envía. El envío es un paso aparte.</span>
+  </p>
+
+<table class="densa">
+<thead><tr>
+  <th></th><th>dominio</th><th>empresa</th><th>hallazgo</th><th title="1 = más fuerte">sev</th>
+  <th title="puntuación comercial">punt</th><th>dirección</th><th>asunto generado</th><th>acciones</th>
+</tr></thead>
+<tbody>
+{% for f in filas %}
+<tr class="fila" tabindex="0" data-id="{{ f.id }}">
+  <td><input type="checkbox" name="envio" value="{{ f.id }}" form="lote"></td>
+  <td class="mono">{{ f.domain }}</td>
+  <td>{{ f.company_name or '—' }}</td>
+  <td class="mono">{{ f.primary_finding_code }}</td>
+  <td class="centro sev-{{ f.severity }}">{{ f.severity }}</td>
+  <td class="centro">{{ f.commercial_score }}</td>
+  <td class="mono">{{ f.email }}</td>
+  <td class="asunto">{{ f.subject }}</td>
+  <td class="acciones-fila">
+    <button form="ap{{ f.id }}" title="Aprobar (a)">a</button>
+    <button form="sa{{ f.id }}" title="Saltar (s)">s</button>
+    <button form="su{{ f.id }}" title="Suprimir para siempre" class="peligro"
+            onclick="return confirm('Suprimir {{ f.domain }} para siempre? No se le podrá escribir nunca más, por ninguna campaña.')">×</button>
+  </td>
+</tr>
+<tr class="detalle"><td colspan="9">
+  <details>
+    <summary>Ver la carta y el escaneo (e para editar)</summary>
+    <div class="dos-columnas">
+      <div>
+        <h3>La carta {% if f.variant %}<span class="variante">variante {{ f.variant }}</span>{% endif %}</h3>
+        <form method="post" action="{{ url_for('accion_envio', send_id=f.id, accion='editar') }}">
+          <input class="asunto-editable" name="asunto" value="{{ f.subject }}">
+          <textarea name="cuerpo" rows="18">{{ f.body }}</textarea>
+          <button>Guardar cambios</button>
+          <span class="nota">Si borras el enlace de baja, no se guarda.</span>
+        </form>
+      </div>
+      <div>
+        <h3>El escaneo, sin interpretar</h3>
+        <pre class="registro">{{ raw(f) | tojson(indent=2) }}</pre>
+        <h3>Por qué califica</h3>
+        <pre class="registro">{{ f.score_breakdown }}</pre>
+      </div>
+    </div>
+  </details>
+</td></tr>
+{% endfor %}
+</tbody></table>
+</form>
+
+{% for f in filas %}
+  <form id="ap{{ f.id }}" method="post" action="{{ url_for('accion_envio', send_id=f.id, accion='aprobar') }}"></form>
+  <form id="sa{{ f.id }}" method="post" action="{{ url_for('accion_envio', send_id=f.id, accion='saltar') }}"></form>
+  <form id="su{{ f.id }}" method="post" action="{{ url_for('accion_envio', send_id=f.id, accion='suprimir') }}"></form>
+{% endfor %}
+
+<script>
+// Lo único con JavaScript de toda la consola. Sin él la tabla sigue funcionando:
+// cada botón es un formulario de verdad.
+document.getElementById('todos').addEventListener('change', e => {
+  document.querySelectorAll('input[name=envio]').forEach(c => c.checked = e.target.checked);
+});
+function confirmarLote(form) {
+  const n = form.querySelectorAll ? document.querySelectorAll('input[name=envio]:checked').length : 0;
+  if (!n) { alert('No has seleccionado ninguno.'); return false; }
+  return confirm('Aprobar ' + n + (n === 1 ? ' correo' : ' correos') + '? Seguirán sin enviarse hasta que lances la tanda.');
+}
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, textarea, select')) return;
+  const fila = document.activeElement.closest('.fila');
+  if (!fila) return;
+  const id = fila.dataset.id;
+  if (e.key === 'a') document.getElementById('ap' + id).submit();
+  if (e.key === 's') document.getElementById('sa' + id).submit();
+  if (e.key === 'e') { const d = fila.nextElementSibling.querySelector('details'); d.open = !d.open; if (d.open) d.querySelector('textarea').focus(); }
+});
+</script>
+{% else %}
+<p class="vacio">No hay nada en cola. Importa dominios, escanea y redacta los borradores
+  desde <a href="{{ url_for('panel') }}">el panel</a>.</p>
+{% endif %}
+{% endblock %}

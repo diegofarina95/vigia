@@ -1,0 +1,114 @@
+/* Consola densa para una sola persona con teclado. Sin framework: son ~180
+   líneas y una dependencia de CSS aquí sería más peso que ayuda. */
+:root{
+  --fondo:#f7f8f9; --papel:#fff; --tinta:#1c2b36; --tenue:#5b6b78; --linea:#d6dee4;
+  --acento:#0d5c8a; --ok:#1f6f4a; --alerta:#b3261e; --aviso:#8a6100;
+  --sev1:#b3261e; --sev2:#c2600e; --sev3:#8a6100; --sev4:#5b6b78; --sev5:#5b6b78; --sev6:#7b8a95;
+}
+@media (prefers-color-scheme:dark){:root{
+  --fondo:#0d1f2d; --papel:#132836; --tinta:#c3d3de; --tenue:#8fa6b5; --linea:#24455a;
+  --acento:#6db3e0; --ok:#7fd1a8; --alerta:#ff8a80; --aviso:#e0b464;
+  --sev1:#ff8a80; --sev2:#ffb27a; --sev3:#e0b464; --sev4:#8fa6b5; --sev5:#8fa6b5; --sev6:#7b8a95;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);line-height:1.5;
+  font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px}
+main{max-width:none;padding:1rem 1.25rem 4rem}
+h1{font-size:1.35rem;margin:.25rem 0 1rem}
+h2{font-size:1.05rem;margin:1.75rem 0 .5rem}
+h3{font-size:.95rem;margin:.75rem 0 .35rem}
+a{color:var(--acento)}
+code,.mono,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.nota{color:var(--tenue);font-size:.85em;font-weight:400}
+.vacio{color:var(--tenue);padding:1rem 0}
+.cuenta{color:var(--tenue);font-weight:400;font-size:.8em}
+
+.barra{display:flex;align-items:center;gap:1.25rem;background:var(--papel);
+  border-bottom:1px solid var(--linea);padding:.6rem 1.25rem;position:sticky;top:0;z-index:5}
+.marca{font-weight:700;text-decoration:none;color:var(--tinta)}
+.barra nav{display:flex;gap:1rem}
+.barra a{text-decoration:none}
+.aviso-tailnet{margin-left:auto;font-family:ui-monospace,monospace;font-size:.72rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--tenue);
+  border:1px solid var(--linea);border-radius:3px;padding:.15rem .5rem}
+
+.flash{margin:.75rem 1.25rem 0;padding:.5rem .75rem;border-radius:4px;
+  border-left:3px solid var(--acento);background:var(--papel)}
+.flash.ok{border-left-color:var(--ok)} .flash.error{border-left-color:var(--alerta)}
+.flash.aviso{border-left-color:var(--aviso)}
+
+.cifras{display:flex;flex-wrap:wrap;gap:.5rem}
+.cifras div{background:var(--papel);border:1px solid var(--linea);border-radius:4px;
+  padding:.5rem .9rem;min-width:7rem}
+.cifras b{display:block;font-size:1.4rem;line-height:1.1}
+.cifras span{color:var(--tenue);font-size:.8rem}
+.cupo,.acciones{background:var(--papel);border:1px solid var(--linea);border-radius:4px;
+  padding:.75rem 1rem;margin-top:1rem}
+.flujo{margin:.5rem 0;padding-left:1.4rem}
+.flujo li{margin:.4rem 0}
+.flujo form{display:inline}
+
+button,.principal{font:inherit;background:var(--papel);color:var(--tinta);
+  border:1px solid var(--linea);border-radius:3px;padding:.25rem .6rem;cursor:pointer}
+button:hover{border-color:var(--acento)}
+button.principal{background:var(--acento);color:#fff;border-color:var(--acento);font-weight:600}
+button.peligro{color:var(--alerta);border-color:var(--alerta)}
+button[disabled]{opacity:.45;cursor:not-allowed}
+
+table.densa{width:100%;border-collapse:collapse;background:var(--papel);
+  border:1px solid var(--linea);font-size:13px}
+table.densa th{text-align:left;font-weight:600;color:var(--tenue);font-size:.75rem;
+  text-transform:uppercase;letter-spacing:.04em;padding:.35rem .5rem;
+  border-bottom:1px solid var(--linea);position:sticky;top:2.6rem;background:var(--papel)}
+table.densa td{padding:.3rem .5rem;border-bottom:1px solid var(--linea);vertical-align:top}
+table.densa tr.fila:hover{background:color-mix(in srgb,var(--acento) 7%,transparent)}
+table.densa tr.fila:focus{outline:2px solid var(--acento);outline-offset:-2px}
+.centro{text-align:center}
+.asunto{max-width:28rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr.total td{font-weight:700;border-top:2px solid var(--linea)}
+.alerta{color:var(--alerta);font-weight:700}
+.sev-1{color:var(--sev1);font-weight:700} .sev-2{color:var(--sev2);font-weight:700}
+.sev-3{color:var(--sev3)} .sev-4{color:var(--sev4)} .sev-5{color:var(--sev5)} .sev-6{color:var(--sev6)}
+.acciones-fila{white-space:nowrap}
+.acciones-fila button{padding:.1rem .45rem;font-family:ui-monospace,monospace}
+tr.detalle td{padding:0}
+tr.detalle summary{cursor:pointer;padding:.3rem .5rem;color:var(--tenue);font-size:.85em}
+.dos-columnas{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:.5rem}
+@media (max-width:1100px){.dos-columnas{grid-template-columns:1fr}}
+.dos-columnas textarea{width:100%;font-family:ui-monospace,monospace;font-size:12px;
+  background:var(--fondo);color:var(--tinta);border:1px solid var(--linea);border-radius:3px;padding:.5rem}
+.asunto-editable{width:100%;font:inherit;margin-bottom:.35rem;padding:.3rem;
+  background:var(--fondo);color:var(--tinta);border:1px solid var(--linea);border-radius:3px}
+.variante{font-weight:400;color:var(--tenue);font-size:.8em}
+
+.filtros{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem}
+.filtros input,.filtros select{font:inherit;padding:.25rem .4rem;border-radius:3px;
+  border:1px solid var(--linea);background:var(--papel);color:var(--tinta)}
+.acciones-lote{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:.5rem 0}
+.formulario fieldset{border:1px solid var(--linea);border-radius:4px;margin:0 0 1rem;
+  padding:.75rem 1rem;background:var(--papel)}
+.formulario textarea{width:100%;font-family:ui-monospace,monospace;font-size:12px;
+  background:var(--fondo);color:var(--tinta);border:1px solid var(--linea);border-radius:3px;padding:.5rem}
+.en-linea{display:flex;gap:.25rem}
+.registro{background:var(--fondo);border:1px solid var(--linea);border-radius:3px;
+  padding:.5rem;max-height:26rem;overflow:auto;font-size:12px;white-space:pre-wrap;word-break:break-word}
+.barra-progreso{height:.5rem;background:var(--linea);border-radius:3px;overflow:hidden;margin:.5rem 0}
+.barra-progreso span{display:block;height:100%;background:var(--acento)}
+.csv{font-size:.8rem;font-weight:400;margin-left:.75rem}
+
+/* Análisis de un dominio suelto. */
+.analizar .dominio{width:100%;max-width:22rem;font:inherit;font-family:ui-monospace,monospace;
+  font-size:1rem;padding:.4rem .5rem;border:1px solid var(--linea);border-radius:3px;
+  background:var(--fondo);color:var(--tinta)}
+.rejilla{display:flex;flex-wrap:wrap;gap:.75rem;margin:.75rem 0}
+.rejilla label{display:flex;flex-direction:column;font-size:.8rem;color:var(--tenue)}
+.rejilla input{font:inherit;padding:.25rem .4rem;border:1px solid var(--linea);
+  border-radius:3px;background:var(--fondo);color:var(--tinta)}
+.guardar{display:block;margin-top:.5rem}
+.califica{color:var(--ok);font-weight:700} .no-califica{color:var(--tenue);font-weight:700}
+.suma{color:var(--ok);font-weight:700} .resta{color:var(--alerta);font-weight:700}
+.estado-pass{color:var(--ok);font-weight:600}
+.estado-fail{color:var(--alerta);font-weight:700}
+.estado-warn{color:var(--aviso);font-weight:600}
+.estado-undetermined{color:var(--tenue)}
+hr{border:0;border-top:1px solid var(--linea);margin:1.5rem 0}

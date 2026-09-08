@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% block titulo %}Bloqueados{% endblock %}
+{% block contenido %}
+<h1>Bloqueados</h1>
+<p class="nota">Nada se descarta en silencio. Todo lo que no llegó a la cola está aquí,
+  con su motivo.</p>
+
+<h2>Prospectos que no llegaron a producir borrador <span class="cuenta">{{ prospectos|length }}</span></h2>
+{% if prospectos %}
+<table class="densa">
+<thead><tr><th>dominio</th><th>empresa</th><th>punt</th><th>motivo</th></tr></thead>
+<tbody>
+{% for p in prospectos %}
+<tr><td class="mono">{{ p.domain }}</td><td>{{ p.company_name or '—' }}</td>
+    <td class="centro">{{ p.commercial_score if p.commercial_score is not none else '—' }}</td>
+    <td>{{ textos.get(motivos[p.id], motivos[p.id]) }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% else %}<p class="vacio">Ninguno.</p>{% endif %}
+
+<h2>Borradores detenidos <span class="cuenta">{{ envios|length }}</span></h2>
+{% if envios %}
+<table class="densa">
+<thead><tr><th>dominio</th><th>dirección</th><th>asunto</th><th>motivo</th></tr></thead>
+<tbody>
+{% for e in envios %}
+<tr><td class="mono">{{ e.domain }}</td><td class="mono">{{ e.email }}</td>
+    <td class="asunto">{{ e.subject }}</td>
+    <td>{{ textos.get(e.blocked_reason, e.blocked_reason or 'saltado a mano') }}</td></tr>
+{% endfor %}
+</tbody></table>
+{% else %}<p class="vacio">Ninguno.</p>{% endif %}
+{% endblock %}

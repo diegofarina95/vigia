@@ -1,0 +1,125 @@
+{% extends "base.html" %}{% block titulo %}Analizar un dominio{% endblock %}
+{% block contenido %}
+<h1>Analizar un dominio</h1>
+
+{% if not disponible %}
+<p class="flash error"><b>El escáner no está disponible.</b> {{ motivo }}</p>
+{% endif %}
+
+<form method="post" class="formulario analizar">
+  <fieldset>
+    <legend>El dominio</legend>
+    <input name="domain" value="{{ datos.get('domain','') }}" required autofocus
+           placeholder="empresa.es" class="dominio">
+    <p class="nota">Vale pegar una URL o un correo: se queda con el dominio.</p>
+    <div class="rejilla">
+      <label>Empresa <input name="company_name" value="{{ datos.get('company_name','') }}"></label>
+      <label>País <input name="country" value="{{ datos.get('country','ES') }}" size="4"></label>
+      <label>Sector <input name="sector" value="{{ datos.get('sector','') }}"
+             placeholder="legal, asesoria, clinica…"></label>
+      <label>Dirección <input name="email" value="{{ datos.get('email','') }}"
+             placeholder="info@empresa.es"></label>
+    </div>
+    <p class="nota">Los cuatro son opcionales. El sector cambia la puntuación (+3 si es
+      de los de valor) y el país elige el idioma de la carta.</p>
+    <label class="guardar"><input type="checkbox" name="guardar" value="1">
+      guardar como prospecto (sin esto no se toca nada)</label>
+  </fieldset>
+  <button class="principal" {% if not disponible %}disabled{% endif %}>Analizar</button>
+  <span class="nota">Tarda unos segundos: consulta DNS y descarga la portada.</span>
+</form>
+
+{% if r %}
+<hr>
+<h2>{{ r.dominio }}</h2>
+
+{% if r.guardado == 'ok' %}<p class="flash ok">Guardado como prospecto.</p>
+{% elif r.guardado == 'suprimido' %}<p class="flash error">No se ha guardado: este dominio
+  está en la lista de supresión. Es permanente.</p>{% endif %}
+
+<div class="dos-columnas">
+  <div>
+    <h3>Veredicto</h3>
+    {% if r.hallazgo %}
+      <table class="densa">
+        <tr><th>gancho elegido</th><td class="mono">{{ r.hallazgo.code }}
+            <span class="nota">(rango {{ r.hallazgo.severity_rank }} de 6)</span></td></tr>
+        <tr><th>asunto</th><td><b>{{ r.hallazgo.subject_line }}</b></td></tr>
+        <tr><th>en claro</th><td>{{ r.hallazgo.plain_language_description }}</td></tr>
+        <tr><th>técnico</th><td class="nota">{{ r.hallazgo.technical_description }}</td></tr>
+        <tr><th>evidencia</th><td class="mono nota">{{ r.hallazgo.evidence }}</td></tr>
+        <tr><th>todo lo que falla</th><td class="mono">{{ r.hallazgo.all_codes|join(', ') }}</td></tr>
+        {% if r.hallazgo.deprioritised %}
+        <tr><th>postergado</th><td>sí — {{ r.hallazgo.deprioritised_reason }}
+            <span class="nota">(sin MX: puede que no le importe)</span></td></tr>
+        {% endif %}
+      </table>
+    {% else %}
+      <p class="flash ok">No hay nada que mencionar: o está bien configurado, o lo que
+        falla no se puede afirmar con certeza. <b>A este dominio no se le escribe.</b></p>
+    {% endif %}
+
+    <h3>Puntuación comercial:
+      <span class="{{ 'califica' if r.puntuacion.qualified else 'no-califica' }}">
+        {{ r.puntuacion.total }}</span>
+      <span class="nota">umbral {{ r.puntuacion.threshold }} —
+        {{ 'entraría en la cola' if r.puntuacion.qualified else 'no entraría' }}</span>
+    </h3>
+    {% if r.puntuacion.unmeasured %}
+    <p class="nota">La web no se pudo medir, así que las señales del sitio valen cero.
+      No es lo mismo que puntuar bajo.</p>
+    {% endif %}
+    <table class="densa">
+      {% for s in r.puntuacion.signals %}
+      <tr><td class="centro {{ 'suma' if s.points > 0 else 'resta' }}">
+          {{ '%+d'|format(s.points) }}</td>
+          <td class="mono">{{ s.name }}</td><td class="nota">{{ s.evidence }}</td></tr>
+      {% endfor %}
+      {% if not r.puntuacion.signals %}<tr><td class="nota">ninguna señal ha disparado</td></tr>{% endif %}
+    </table>
+
+    <h3>Autenticación de correo</h3>
+    <table class="densa">
+      {% for m in r.mecanismos %}
+      {% set sec = r.informe.get(m, {}) %}
+      <tr><td class="mono">{{ m }}</td>
+          <td class="centro estado-{{ sec.get('status') }}">{{ sec.get('status') }}</td>
+          <td class="nota">{{ sec.get('summary') }}</td></tr>
+      {% endfor %}
+      <tr><td class="mono">mx</td><td class="centro">
+        {{ r.informe.get('mx', {}).get('records')|length }}</td>
+        <td class="nota">{{ r.informe.get('mx', {}).get('provider') or '—' }}</td></tr>
+    </table>
+  </div>
+
+  <div>
+    <h3>La carta que se enviaría <span class="nota">(vista previa, no encolada)</span></h3>
+    {% if r.carta %}
+      <p class="nota">Variante {{ r.carta.variant }} · idioma {{ r.carta.lang }}</p>
+      <pre class="registro">Asunto: {{ r.carta.subject }}
+
+{{ r.carta.body }}</pre>
+      <p class="nota">El enlace de baja dice <code>VISTA-PREVIA</code> a propósito: una
+        vista previa no debe poder confundirse con algo enviable.</p>
+    {% elif r.error_carta %}
+      <p class="flash error">No se puede completar la carta: {{ r.error_carta }}</p>
+    {% else %}
+      <p class="nota">Sin hallazgo no hay carta.</p>
+    {% endif %}
+
+    <h3>El escaneo, sin interpretar</h3>
+    <details><summary>ver el informe DNS completo</summary>
+      <pre class="registro">{{ r.informe | tojson(indent=2) }}</pre></details>
+    <details><summary>ver lo observado en la web</summary>
+      <pre class="registro">resuelve: {{ r.sitio.resolves }}
+url final: {{ r.sitio.final_url or '—' }}
+código: {{ r.sitio.status_code or '—' }}
+error: {{ r.sitio.error or '—' }}
+nameservers: {{ r.sitio.nameservers|join(', ') or '—' }}
+TXT: {{ r.sitio.txt_records|join(' | ') or '—' }}
+notas: {{ r.sitio.notes|join('; ') or '—' }}
+HTML: {{ r.sitio.html|length }} bytes</pre></details>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

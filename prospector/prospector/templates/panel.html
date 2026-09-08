@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% block titulo %}Panel{% endblock %}
+{% block contenido %}
+<h1>Panel</h1>
+
+{% if not escaner_ok %}
+<p class="flash error"><b>El escáner no está disponible:</b> {{ escaner_motivo }}</p>
+{% endif %}
+
+{% if s.sender.placeholders() %}
+<p class="flash error"><b>Datos del remitente de relleno</b> ({{ s.sender.placeholders()|join(', ') }}).
+  Puedes recorrer todo el flujo, pero <b>no se enviará nada</b>: identificar
+  falsamente al remitente es peor que no identificarlo. Pon el NIF y la dirección
+  reales en <code>.env</code> y reinicia.</p>
+{% endif %}
+
+<section class="cifras">
+  <div><b>{{ d.prospectos }}</b><span>prospectos</span></div>
+  <div><b>{{ d.sin_escanear }}</b><span>sin escanear</span></div>
+  <div><b>{{ d.calificados }}</b><span>califican</span></div>
+  <div><b>{{ d.en_cola }}</b><span>en cola</span></div>
+  <div><b>{{ d.aprobados }}</b><span>aprobados</span></div>
+  <div><b>{{ d.enviados }}</b><span>enviados</span></div>
+  <div><b>{{ d.bloqueados }}</b><span>bloqueados</span></div>
+  <div><b>{{ d.supresiones }}</b><span>supresiones</span></div>
+</section>
+
+<section class="cupo">
+  <h2>Hoy</h2>
+  <p>Enviados hoy <b>{{ d.hoy }}</b> de un cupo de <b>{{ d.cupo }}</b>
+     {%- if s.warmup_enabled %} (rampa de calentamiento activa){% endif %}.
+     Quedan <b>{{ d.restantes }}</b>.</p>
+  {% if d.cupo < s.daily_cap %}
+  <p class="nota">La rampa empieza en {{ s.warmup_start }} y sube {{ s.warmup_step }}
+     cada {{ s.warmup_step_days }} días hasta {{ s.daily_cap }}. Es lo que evita que
+     el dominio acabe en listas negras y tu correo normal en spam.</p>
+  {% endif %}
+</section>
+
+<section class="acciones">
+  <h2>Flujo</h2>
+  <ol class="flujo">
+    <li><a href="{{ url_for('importar_form') }}">Importar dominios</a> — o <a href="{{ url_for('analizar_form') }}">analizar uno solo</a> sin guardarlo</li>
+    <li><form method="post" action="{{ url_for('escanear') }}">
+        <button {% if job.running %}disabled{% endif %}>Escanear y calificar</button>
+        <label><input type="checkbox" name="todos" value="1"> volver a escanear todo</label>
+      </form></li>
+    <li><form method="post" action="{{ url_for('construir_cola') }}">
+        <button>Redactar borradores</button></form></li>
+    <li><a href="{{ url_for('revisar') }}">Revisar y aprobar</a> — a mano, uno a uno o en bloque</li>
+    <li><form method="post" action="{{ url_for('enviar') }}"
+              onsubmit="return confirm('Se enviarán hasta {{ d.restantes }} correos aprobados. ¿Seguimos?')">
+        <button class="peligro" {% if job.running or not d.restantes or s.sender.placeholders() %}disabled{% endif %}>
+          Enviar los aprobados ({{ d.restantes }} como mucho)</button></form></li>
+  </ol>
+  <p class="nota">Nada sale sin que alguien lo apruebe antes. No hay envío automático.</p>
+</section>
+{% if job.running %}<p><a href="{{ url_for('progreso') }}">Hay un trabajo en marcha →</a></p>{% endif %}
+{% endblock %}

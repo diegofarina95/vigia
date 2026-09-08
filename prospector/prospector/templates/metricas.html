@@ -1,0 +1,59 @@
+{% extends "base.html" %}{% block titulo %}Métricas{% endblock %}
+{% block contenido %}
+<h1>Métricas <a class="csv" href="{{ url_for('metricas_csv') }}">descargar CSV</a></h1>
+
+<h2>Por hallazgo <span class="nota">— la cifra que decide qué gancho funciona</span></h2>
+<table class="densa">
+<thead><tr><th>hallazgo</th><th>enviados</th><th>respuestas</th><th>tasa</th>
+  <th>interesados</th><th>bajas</th><th>rebotes</th></tr></thead>
+<tbody>
+{% for f in r.by_finding %}
+<tr><td class="mono">{{ f.key }}</td><td class="centro">{{ f.sent }}</td>
+    <td class="centro">{{ f.replies }}</td>
+    <td class="centro"><b>{{ '%.1f'|format(f.reply_rate * 100) }}%</b></td>
+    <td class="centro">{{ f.interested }}</td><td class="centro">{{ f.unsubscribes }}</td>
+    <td class="centro {{ 'alerta' if f.bounce_rate > 0.03 }}">{{ f.bounces }}</td></tr>
+{% endfor %}
+<tr class="total"><td>total</td><td class="centro">{{ r.totals.sent }}</td>
+    <td class="centro">{{ r.totals.replies }}</td>
+    <td class="centro"><b>{{ '%.1f'|format(r.totals.reply_rate * 100) }}%</b></td>
+    <td class="centro">{{ r.totals.interested }}</td>
+    <td class="centro">{{ r.totals.unsubscribes }}</td>
+    <td class="centro">{{ r.totals.bounces }}</td></tr>
+</tbody></table>
+{% if r.totals.bounce_rate > 0.03 %}
+<p class="flash error">Tasa de rebote del {{ '%.1f'|format(r.totals.bounce_rate * 100) }}%.
+  Por encima del 3% conviene parar: es la señal más fuerte para un receptor de que la
+  lista no era consentida.</p>
+{% endif %}
+
+<h2>Por variante A/B</h2>
+<table class="densa">
+<thead><tr><th>variante</th><th>enviados</th><th>respuestas</th><th>tasa</th></tr></thead>
+<tbody>
+{% for v in r.by_variant %}
+<tr><td class="mono">{{ v.key }}</td><td class="centro">{{ v.sent }}</td>
+    <td class="centro">{{ v.replies }}</td>
+    <td class="centro"><b>{{ '%.1f'|format(v.reply_rate * 100) }}%</b></td></tr>
+{% endfor %}
+</tbody></table>
+
+<h2>Enviados <span class="nota">— anota a mano lo que conteste cada uno</span></h2>
+<table class="densa">
+<thead><tr><th>fecha</th><th>dominio</th><th>hallazgo</th><th>respuesta</th><th></th></tr></thead>
+<tbody>
+{% for e in enviados %}
+<tr><td class="mono">{{ e.sent_at[:16] if e.sent_at }}</td>
+    <td class="mono">{{ e.domain }}</td><td class="mono">{{ e.primary_finding_code }}</td>
+    <td>{{ e.respuesta or '—' }}</td>
+    <td><form method="post" action="{{ url_for('respuesta', send_id=e.id) }}" class="en-linea">
+      <select name="clase">
+        <option value="interested">interesado</option>
+        <option value="not_interested">no interesado</option>
+        <option value="unsubscribe">baja</option>
+        <option value="bounce">rebote</option>
+        <option value="other">otro</option>
+      </select><button>anotar</button></form></td></tr>
+{% endfor %}
+</tbody></table>
+{% endblock %}

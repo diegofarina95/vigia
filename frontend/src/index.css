@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+/* Fuentes autoalojadas. Antes se cargaban de fonts.googleapis.com, lo que
+   enviaba la IP y el navegador de cada visitante a un tercero — incluida la
+   propia página de privacidad, que promete no compartir nada. Ahora salen del
+   mismo origen y no hay tercero que declarar. */
+@import "@fontsource-variable/bricolage-grotesque/index.css";
+@import "@fontsource-variable/inter/index.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+
+/* `dark:` follows the class, not the media query, because there is a switch. The
+   class is written before first paint by the inline script in index.html and
+   mirrored into a cookie so the Flask-rendered pages (/privacy, /terms, /connect)
+   land on the same theme instead of contradicting the app the reader just left. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+
+@theme {
+  /* Night-watch palette: harbor ink + beacon amber. */
+  --color-ink: #0d1f2d;
+  --color-ink-2: #14324a;
+  --color-ink-3: #1e415e;
+  --color-mist: #9db4c4; /* muted text on ink */
+  --color-paper: #f2f5f4;
+  --color-card: #ffffff;
+  --color-line: #dde5e3;
+  --color-body: #24333e;
+  --color-dim: #5c7183;
+
+  /* `strong` exists because `ink` was doing two incompatible jobs: emphatic TEXT
+     on a light surface (`text-strong`, 75 uses) and the BACKGROUND of a dark block
+     (`bg-ink`, 34 uses). One value cannot serve both across two themes — lighten
+     it so the text reads and the block disappears; darken it so the block reads
+     and the text does. Split by role: `ink` stays the brand surface, `strong` is
+     emphatic text. In light mode `strong` is the same navy as before, so nothing
+     changes visually. */
+  --color-strong: #0d1f2d;
+  --color-strong-2: #14324a;
+  --color-beacon: #f2b63c;
+  --color-beacon-deep: #b07d10;
+
+  --color-sev-critical: #b93a48;
+  --color-sev-high: #cf6f33;
+  --color-sev-medium: #b98a1d;
+  --color-sev-low: #6f8ba0;
+  --color-sev-info: #8195a6;
+
+  /* Was #2f8f63, which measures 4.02:1 on a white card and is used as a TEXT
+     colour in 12 places — under the 4.5:1 floor. Found while designing the dark
+     palette; propagating a known-failing pair into a second theme would have
+     doubled the defect instead of fixing it. #217050 is 6.00:1 and still reads
+     green. */
+  --color-ok: #217050;
+  --color-bad: #b93a48;
+  --color-mid: #b98a1d;
+  --color-unk: #77909f;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ── The dark theme ──────────────────────────────────────────────────────────
+   Not an inversion. Vigía already contained its own dark palette — ink, ink-2,
+   ink-3, mist — it simply never used it as the page ground. So the ground goes
+   DEEPER than ink (#0b1620 against ink's #0d1f2d), which is what lets the dark
+   blocks keep reading as blocks: they now sit above the page instead of below it.
+   Every pair measured against its real background:
+     body   #dbe6ee on card #12222e ... 12.80:1  AAA
+     dim    #93a8b6 on card ..........  6.58:1  AA
+     strong #f2f7fa on card ..........  15.04:1 AAA
+     mist   #b9cdda on block #1b3243 ..  8.09:1  AAA
+     beacon #f2b63c on card ..........  8.91:1  AAA
+     severities, ok, bad, mid, unk ....  6.23:1 – 9.24:1, all AA or better
+   The raised block is 1.38:1 against the ground — enough to read as a surface
+   without becoming a second card. */
+.dark {
+  color-scheme: dark;
+
+  --color-paper: #0b1620;   /* the page ground, deeper than ink */
+  --color-card: #12222e;
+  --color-line: #22394a;
+  --color-body: #dbe6ee;
+  --color-dim: #93a8b6;
+
+  /* Emphatic text flips; the brand surface rises. */
+  --color-strong: #f2f7fa;
+  --color-strong-2: #cfdde7;
+  --color-ink: #1b3243;
+  --color-ink-2: #24455a;
+  --color-ink-3: #2f5a75;
+  --color-mist: #b9cdda;
+
+  --color-beacon: #f2b63c;
+  --color-beacon-deep: #e8a72c;
+
+  --color-sev-critical: #ff8a94;
+  --color-sev-high: #f0a06a;
+  --color-sev-medium: #e3c05a;
+  --color-sev-low: #9db4c4;
+  --color-sev-info: #8fa3b3;
+
+  --color-ok: #5fd39b;
+  --color-bad: #ff8a94;
+  --color-mid: #e3c05a;
+  --color-unk: #9db4c4;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-paper text-body antialiased;
+}
+
+/* Visible keyboard focus everywhere, in the beacon colour so it reads as
+   part of the brand instead of a browser default. */
+:focus-visible {
+  outline: 2px solid #f2b63c;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Loading skeleton: a slow sweep, so an empty dashboard looks like it is
+   arriving rather than broken. */
+.skeleton {
+  background: linear-gradient(90deg, #e8eeec 25%, #f2f5f4 50%, #e8eeec 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+/* Only the gradient changes; the sweep belongs to both themes. Splitting the
+   rule the careless way moved `animation` into the dark block and the light
+   skeleton stopped sweeping — a loading state that stops loading. */
+.dark .skeleton {
+  background: linear-gradient(90deg, #162835 25%, #1d3344 50%, #162835 75%);
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Rows that can be opened get a touch of lift on hover — enough to read as
+   clickable, not enough to bounce the page around. */
+.row-lift {
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+.row-lift:hover {
+  border-color: #b6c5c0;
+  box-shadow: 0 1px 3px rgb(13 31 45 / 0.07);
+  transform: translateY(-1px);
+}
+.dark .row-lift:hover {
+  border-color: #3a6a88;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+}
+
+/* A live scan is the one place a pulse earns its keep. */
+.pulse-dot {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* The vigía's sweep: a slow radar beam behind the hero. */
+.radar-sweep {
+  background: conic-gradient(
+    from 0deg,
+    rgba(242, 182, 60, 0.16) 0deg,
+    rgba(242, 182, 60, 0.05) 40deg,
+    transparent 90deg,
+    transparent 360deg
+  );
+  animation: sweep 14s linear infinite;
+}
+
+@keyframes sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+::selection {
+  background: #f2b63c;
+  color: #0d1f2d;
+}
+
+/* --- Red de seguridad para pantallas estrechas -------------------------
+   Un informe de seguridad está lleno de cadenas que no se pueden partir por
+   un espacio porque no lo tienen: direcciones de correo, IP, identificadores
+   de cliente OAuth de 21 dígitos, registros SPF de doscientos caracteres.
+   En un móvil cualquiera de ellas empuja la página entera hacia la derecha y
+   deja al lector arrastrando el dedo para leer una frase. Se corrige de raíz
+   —nadie se acuerda de poner `break-all` en la tarjeta número catorce— y no
+   con una clase por sitio. */
+html,
+body {
+  overflow-x: hidden;
+}
+
+.font-mono,
+code,
+pre {
+  overflow-wrap: anywhere;
+}
+
+/* Un `pre` con desbordamiento propio sí puede tener su barra: ahí la línea
+   larga es el dato (un registro DNS) y partirlo lo haría ilegible. */
+pre[class*="overflow-x-auto"] {
+  overflow-wrap: normal;
+}
+
+/* Área de toque mínima cómoda en móvil. Por debajo de esto se falla el
+   objetivo y se pulsa el de al lado. */
+@media (max-width: 640px) {
+  button,
+  a[role="button"],
+  summary {
+    min-height: 44px;
+  }
+}
